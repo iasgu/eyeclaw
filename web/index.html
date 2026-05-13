@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Show Once 控制台</title>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --panel-soft: #fafcff;
+        --ink: #1f2a37;
+        --muted: #6b7280;
+        --line: #dbe3ef;
+        --line-strong: #c7d6ec;
+        --accent: #1677ff;
+        --accent-soft: #e8f2ff;
+        --success: #13a36b;
+        --warn: #f08a24;
+        --danger: #e24d4d;
+        --shadow: 0 18px 50px rgba(22, 53, 107, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--ink);
+        background:
+          linear-gradient(180deg, rgba(22, 119, 255, 0.08), transparent 180px),
+          linear-gradient(135deg, #f7f9fc 0%, #f4f7fb 45%, #eff3f9 100%);
+        min-height: 100vh;
+      }
+
+      .shell {
+        width: min(1380px, calc(100vw - 32px));
+        margin: 18px auto 28px;
+        display: grid;
+        grid-template-columns: 1.35fr 0.95fr;
+        gap: 18px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .hero {
+        padding: 24px 24px 18px;
+        border-bottom: 1px solid var(--line);
+        background:
+          linear-gradient(135deg, rgba(22, 119, 255, 0.08), rgba(22, 119, 255, 0.02)),
+          linear-gradient(180deg, #ffffff, #fbfdff);
+      }
+
+      .hero-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+      }
+
+      .hero p {
+        margin: 10px 0 0;
+        max-width: 760px;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .badge {
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        border: 1px solid rgba(22, 119, 255, 0.12);
+        color: var(--accent);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .flow {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .flow-item {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid var(--line);
+      }
+
+      .flow-item strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        color: var(--accent);
+      }
+
+      .flow-item span {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .workspace {
+        padding: 18px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .section {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--panel-soft);
+        padding: 16px;
+      }
+
+      .section h2 {
+        margin: 0 0 8px;
+        font-size: 17px;
+      }
+
+      .section p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .thread {
+        margin-top: 14px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 14px;
+        min-height: 260px;
+        max-height: 420px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .bubble {
+        max-width: 86%;
+        padding: 12px 14px;
+        border-radius: 16px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+      }
+
+      .assistant {
+        align-self: flex-start;
+        background: #f5f9ff;
+        border: 1px solid #dbe9ff;
+      }
+
+      .user {
+        align-self: flex-end;
+        background: var(--accent);
+        color: white;
+      }
+
+      .form-grid {
+        margin-top: 14px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .row.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #495566;
+      }
+
+      input[type="text"],
+      input[type="datetime-local"],
+      input[type="number"],
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+        padding: 12px 13px;
+        font: inherit;
+        color: var(--ink);
+        background: #ffffff;
+        outline: none;
+        transition: border-color 140ms ease, box-shadow 140ms ease;
+      }
+
+      input:focus,
+      textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.12);
+      }
+
+      textarea {
+        min-height: 108px;
+        resize: vertical;
+      }
+
+      .btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 12px;
+        padding: 11px 16px;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: white;
+        box-shadow: 0 10px 24px rgba(22, 119, 255, 0.18);
+      }
+
+      button.secondary {
+        background: #eef5ff;
+        color: var(--accent);
+        border: 1px solid #d6e7ff;
+      }
+
+      button.warn {
+        background: #fff3e8;
+        color: #d96c10;
+        border: 1px solid #ffd6b3;
+      }
+
+      .side {
+        display: grid;
+        gap: 16px;
+        align-content: start;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .card h2 {
+        margin: 0 0 10px;
+        font-size: 17px;
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #f5f9ff;
+        border: 1px solid #dbe9ff;
+        color: #476282;
+        font-size: 13px;
+      }
+
+      .manual {
+        display: grid;
+        gap: 8px;
+      }
+
+      .manual-item {
+        padding: 12px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fcfdff;
+      }
+
+      .manual-item strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 13px;
+        color: var(--accent);
+      }
+
+      .manual-item span {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .steps,
+      .task-list {
+        display: grid;
+        gap: 10px;
+        max-height: 300px;
+        overflow: auto;
+      }
+
+      .step,
+      .task {
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fcfdff;
+      }
+
+      .step strong,
+      .task strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+      }
+
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: #0f1724;
+        color: #edf2fb;
+        padding: 14px;
+        border-radius: 14px;
+        font-size: 12px;
+        max-height: 280px;
+        overflow: auto;
+      }
+
+      @media (max-width: 1080px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .flow {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        .row,
+        .row.three,
+        .flow {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-top {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel">
+        <div class="hero">
+          <div class="hero-top">
+            <div>
+              <h1>Show Once 原型控制台</h1>
+              <p>
+                先用浏览器监听器收集关键操作，再用监听器引导关键帧抽取，最后交给多模态模型生成 SOP 与可回放步骤。
+              </p>
+            </div>
+            <div class="badge" id="configBadge">正在检查后端配置</div>
+          </div>
+
+          <div class="flow">
+            <div class="flow-item">
+              <strong>步骤 1</strong>
+              <span>加载扩展并在 Edge 里执行真实操作。</span>
+            </div>
+            <div class="flow-item">
+              <strong>步骤 2</strong>
+              <span>监听器记录关键事件并捕获关键截图。</span>
+            </div>
+            <div class="flow-item">
+              <strong>步骤 3</strong>
+              <span>模型分析监听会话，生成 SOP 和步骤计划。</span>
+            </div>
+            <div class="flow-item">
+              <strong>步骤 4</strong>
+              <span>如有需要，再用监听会话去引导视频分析。</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="workspace">
+          <section class="section">
+            <h2>任务对话</h2>
+            <p>这里记录你刚才发起的操作、分析请求和系统返回的关键提示。</p>
+            <div class="thread" id="thread">
+              <div class="bubble assistant">
+                控制台已就绪。建议先在 Edge 里加载监听器扩展并操作一遍页面，再回来点“分析监听会话”。
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <h2>视频与分析参数</h2>
+            <p>视频分析现在会严格参照监听器会话，不再使用纯均匀抽帧逻辑。</p>
+
+            <div class="form-grid">
+              <div class="row">
+                <div>
+                  <label for="videoInput">视频文件</label>
+                  <input id="videoInput" type="file" accept="video/mp4" />
+                </div>
+                <div>
+                  <label for="videoPath">当前视频路径</label>
+                  <input id="videoPath" type="text" placeholder="默认使用 website.mp4" />
+                </div>
+              </div>
+
+              <div>
+                <label for="requestInput">任务说明</label>
+                <textarea
+                  id="requestInput"
+                  placeholder="例如：请重点识别登录、藏经阁进入、行业筛选、地区筛选以及后续关键步骤。"
+                ></textarea>
+              </div>
+
+              <div class="row three">
+                <input id="startSecond" type="number" value="0" min="0" step="0.5" placeholder="开始秒数" />
+                <input id="endSecond" type="number" value="20" min="0" step="0.5" placeholder="结束秒数" />
+                <input id="maxFrames" type="number" value="12" min="3" max="60" step="1" placeholder="关键帧上限" />
+              </div>
+
+              <div class="btns">
+                <button class="secondary" id="uploadBtn">上传视频</button>
+                <button class="primary" id="analyzeBtn">分析视频流程</button>
+                <button class="secondary" id="connectBtn">连接已打开的 Edge</button>
+                <button class="primary" id="runBtn">执行实时流程</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <aside class="side">
+        <section class="card">
+          <h2>快速使用说明</h2>
+          <div class="manual">
+            <div class="manual-item">
+              <strong>1. 启动监听器</strong>
+              <span>打开 `edge://extensions`，加载 `browser_listener_extension` 目录。</span>
+            </div>
+            <div class="manual-item">
+              <strong>2. 真实操作页面</strong>
+              <span>在 Edge 里按真实流程点击，监听器会记录关键事件与截图。</span>
+            </div>
+            <div class="manual-item">
+              <strong>3. 分析监听会话</strong>
+              <span>点击“分析监听会话”，系统会优先用监听器引导关键帧理解。</span>
+            </div>
+            <div class="manual-item">
+              <strong>4. 结合视频验证</strong>
+              <span>如果要分析 `website.mp4`，必须先有监听会话，再点“分析视频流程”。</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>浏览器状态</h2>
+          <div class="meta">CDP 地址</div>
+          <input id="cdpUrl" type="text" value="http://127.0.0.1:9222" />
+          <div style="margin-top: 12px" class="status" id="browserStatus">尚未连接实时浏览器</div>
+        </section>
+
+        <section class="card">
+          <h2>监听器状态</h2>
+          <div class="meta">这里显示来自 Edge / Chrome 扩展的事件、截图数量和最新会话。</div>
+          <div style="margin-top: 12px" class="status" id="listenerStatus">等待本地监听器事件</div>
+          <div class="btns" style="margin-top: 12px">
+            <button class="primary" id="analyzeListenerBtn">分析监听会话</button>
+            <button class="secondary" id="refreshListenerBtn">刷新监听器</button>
+            <button class="warn" id="clearListenerBtn">清空监听事件</button>
+          </div>
+          <div class="task-list" id="listenerList" style="margin-top: 12px"></div>
+        </section>
+
+        <section class="card">
+          <h2>回放步骤</h2>
+          <div class="steps" id="stepsPanel"></div>
+        </section>
+
+        <section class="card">
+          <h2>定时任务</h2>
+          <div class="row">
+            <input id="scheduleName" type="text" value="定时执行环评流程" />
+            <input id="scheduleTime" type="datetime-local" />
+          </div>
+          <div class="btns" style="margin-top: 12px">
+            <button class="secondary" id="scheduleBtn">创建定时任务</button>
+            <button class="warn" id="refreshTasksBtn">刷新任务列表</button>
+          </div>
+          <div class="task-list" id="taskList" style="margin-top: 12px"></div>
+        </section>
+
+        <section class="card">
+          <h2>调试输出</h2>
+          <pre id="debugOutput">等待操作...</pre>
+        </section>
+      </aside>
+    </main>
+
+    <script>
+      const TEXT = {
+        backendReady: "后端配置正常",
+        backendNotReady: "后端配置不完整",
+        noSteps: "当前还没有生成步骤。",
+        noListenerEvents: "还没有监听到浏览器事件。请先加载扩展并在页面中执行真实操作。",
+        noTasks: "当前还没有定时任务。",
+        noValue: "（无）",
+      };
+
+      const state = {
+        uploadedVideoPath: "",
+        lastPlan: null,
+        latestListenerSessionId: "",
+      };
+
+      const els = {
+        thread: document.getElementById("thread"),
+        configBadge: document.getElementById("configBadge"),
+        videoInput: document.getElementById("videoInput"),
+        videoPath: document.getElementById("videoPath"),
+        requestInput: document.getElementById("requestInput"),
+        startSecond: document.getElementById("startSecond"),
+        endSecond: document.getElementById("endSecond"),
+        maxFrames: document.getElementById("maxFrames"),
+        cdpUrl: document.getElementById("cdpUrl"),
+        browserStatus: document.getElementById("browserStatus"),
+        listenerStatus: document.getElementById("listenerStatus"),
+        listenerList: document.getElementById("listenerList"),
+        stepsPanel: document.getElementById("stepsPanel"),
+        debugOutput: document.getElementById("debugOutput"),
+        scheduleName: document.getElementById("scheduleName"),
+        scheduleTime: document.getElementById("scheduleTime"),
+        taskList: document.getElementById("taskList"),
+      };
+
+      function addBubble(role, text) {
+        const node = document.createElement("div");
+        node.className = `bubble ${role}`;
+        node.textContent = text;
+        els.thread.appendChild(node);
+        els.thread.scrollTop = els.thread.scrollHeight;
+      }
+
+      function setDebug(value) {
+        els.debugOutput.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+      }
+
+      function shortText(value, fallback = TEXT.noValue) {
+        if (!value) return fallback;
+        const text = String(value);
+        return text.length > 96 ? `${text.slice(0, 93)}...` : text;
+      }
+
+      function renderSteps(plan) {
+        els.stepsPanel.innerHTML = "";
+        if (!plan || !plan.steps || !plan.steps.length) {
+          els.stepsPanel.innerHTML = `<div class="meta">${TEXT.noSteps}</div>`;
+          return;
+        }
+        for (const step of plan.steps) {
+          const node = document.createElement("div");
+          node.className = "step";
+          node.innerHTML = `
+            <strong>步骤 ${step.step_number} - ${step.action}</strong>
+            <div>${step.target || "（无目标）"}</div>
+            <div class="meta">${step.value || step.notes || ""}</div>
+          `;
+          els.stepsPanel.appendChild(node);
+        }
+      }
+
+      function renderListenerEvents(events) {
+        els.listenerList.innerHTML = "";
+        if (!events || !events.length) {
+          els.listenerList.innerHTML = `<div class="meta">${TEXT.noListenerEvents}</div>`;
+          return;
+        }
+
+        for (const event of events) {
+          const node = document.createElement("div");
+          node.className = "task";
+          const focusLine = event.target_text || event.page_title || event.page_url || "";
+          node.innerHTML = `
+            <strong>${event.event_type}${event.is_key_candidate ? " - 关键候选" : ""}</strong>
+            <div class="meta">${shortText(focusLine)}</div>
+            <div class="meta">${shortText(event.page_url, "（无地址）")}</div>
+            <div class="meta">${event.received_at_iso}</div>
+          `;
+          els.listenerList.appendChild(node);
+        }
+      }
+
+      async function api(path, options = {}) {
+        const response = await fetch(path, options);
+        const rawText = await response.text();
+        let data;
+        try {
+          data = rawText ? JSON.parse(rawText) : {};
+        } catch {
+          data = { error: rawText || `接口 ${path} 返回了非 JSON 数据` };
+        }
+        if (!response.ok) {
+          throw new Error(data.error || data.message || JSON.stringify(data));
+        }
+        return data;
+      }
+
+      async function loadStatus() {
+        const data = await api("/api/status");
+        els.configBadge.textContent = data.config_ready ? TEXT.backendReady : TEXT.backendNotReady;
+      }
+
+      async function refreshListener() {
+        const [statusData, eventsData] = await Promise.all([
+          api("/api/browser-listener/status"),
+          api("/api/browser-listener/events?limit=20"),
+        ]);
+        state.latestListenerSessionId = statusData.latest_session_id || "";
+        const sessionSuffix = statusData.latest_session_id ? ` - 会话 ${statusData.latest_session_id.slice(0, 8)}` : "";
+        const eventSuffix = statusData.last_event_type ? ` - 最新 ${statusData.last_event_type}` : "";
+        els.listenerStatus.textContent =
+          `${statusData.buffered_events} 条缓存 / ${statusData.received_count} 条已接收 / ${statusData.screenshot_event_count || 0} 张截图` +
+          `${sessionSuffix}${eventSuffix}`;
+        renderListenerEvents(eventsData.events || []);
+      }
+
+      async function clearListener() {
+        await api("/api/browser-listener/events/clear", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        await refreshListener();
+      }
+
+      async function analyzeListenerSession() {
+        const payload = {
+          user_request: els.requestInput.value.trim(),
+          max_events: 8,
+        };
+        addBubble("user", payload.user_request || "请分析最近一次监听会话。");
+        const data = await api("/api/browser-listener/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        state.lastPlan = data.plan;
+        renderSteps(data.plan);
+        renderListenerEvents(data.candidate_events || []);
+        addBubble(
+          "assistant",
+          `已分析监听会话 ${data.session_id.slice(0, 8)}，共使用 ${data.frame_count} 张候选关键帧。`
+        );
+        setDebug(data);
+      }
+
+      async function uploadVideo() {
+        const file = els.videoInput.files[0];
+        if (!file) {
+          addBubble("assistant", "请先选择一个 MP4 视频文件。");
+          return;
+        }
+        addBubble("user", `上传视频：${file.name}`);
+        const form = new FormData();
+        form.append("video", file);
+        const data = await api("/api/upload", { method: "POST", body: form });
+        state.uploadedVideoPath = data.video_path;
+        els.videoPath.value = data.video_path;
+        addBubble("assistant", `视频上传完成，时长 ${data.duration_seconds.toFixed(2)} 秒。`);
+        setDebug(data);
+      }
+
+      async function analyzeVideo() {
+        const userRequest = els.requestInput.value.trim();
+        addBubble("user", userRequest || "请基于当前监听会话分析这个视频。");
+        const payload = {
+          video_path: els.videoPath.value.trim() || state.uploadedVideoPath || "website.mp4",
+          user_request: userRequest,
+          start_second: Number(els.startSecond.value || 0),
+          end_second: Number(els.endSecond.value || 20),
+          max_frames: Number(els.maxFrames.value || 12),
+          listener_session_id: state.latestListenerSessionId || null,
+        };
+        const data = await api("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        state.lastPlan = data.plan;
+        renderSteps(data.plan);
+        addBubble(
+          "assistant",
+          `已根据监听器引导关键帧完成视频分析，会话 ${String(data.listener_session_id || "").slice(0, 8)} 共生成 ${data.plan.steps.length} 个步骤。`
+        );
+        setDebug(data);
+      }
+
+      async function connectBrowser() {
+        const payload = { cdp_url: els.cdpUrl.value.trim() };
+        const data = await api("/api/browser/connect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        els.browserStatus.textContent = `${data.page_role} - ${data.title}`;
+        addBubble("assistant", `已连接实时浏览器，当前状态：${data.page_role}。`);
+        setDebug(data);
+      }
+
+      async function runBrowser() {
+        addBubble("assistant", "开始执行实时浏览器流程。");
+        try {
+          const data = await api("/api/browser/live-run", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              cdp_url: els.cdpUrl.value.trim(),
+              user_request: els.requestInput.value.trim(),
+            }),
+          });
+          addBubble("assistant", "实时流程执行完成。");
+          setDebug(data);
+        } catch (error) {
+          addBubble("assistant", `实时流程未完成：${error.message}`);
+          setDebug(error.message);
+        }
+      }
+
+      function toIsoOrNull(localValue) {
+        if (!localValue) {
+          return null;
+        }
+        const parsed = new Date(localValue);
+        if (Number.isNaN(parsed.getTime())) {
+          return null;
+        }
+        return parsed.toISOString();
+      }
+
+      async function createSchedule() {
+        const runAtIso = toIsoOrNull(els.scheduleTime.value);
+        if (!runAtIso) {
+          addBubble("assistant", "请先选择有效的定时时间。");
+          return;
+        }
+
+        const payload = {
+          name: els.scheduleName.value.trim(),
+          run_at_iso: runAtIso,
+          task_type: "eia_live_workflow",
+          cdp_url: els.cdpUrl.value.trim(),
+          user_request: els.requestInput.value.trim(),
+        };
+        const data = await api("/api/schedules", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        addBubble("assistant", `已创建定时任务：${data.name}`);
+        await refreshTasks();
+      }
+
+      async function refreshTasks() {
+        const data = await api("/api/schedules");
+        els.taskList.innerHTML = "";
+        if (!data.tasks || !data.tasks.length) {
+          els.taskList.innerHTML = `<div class="meta">${TEXT.noTasks}</div>`;
+          return;
+        }
+        for (const task of data.tasks) {
+          const node = document.createElement("div");
+          node.className = "task";
+          node.innerHTML = `
+            <strong>${task.name}</strong>
+            <div class="meta">${task.run_at_iso}</div>
+            <div class="meta">状态：${task.status}</div>
+            ${task.last_error ? `<div class="meta">错误：${shortText(task.last_error)}</div>` : ""}
+          `;
+          els.taskList.appendChild(node);
+        }
+        setDebug(data);
+      }
+
+      function setDefaultScheduleTime() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 10);
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        els.scheduleTime.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
+
+      document.getElementById("uploadBtn").addEventListener("click", () => uploadVideo().catch((error) => setDebug(error.message)));
+      document.getElementById("analyzeBtn").addEventListener("click", () => analyzeVideo().catch((error) => setDebug(error.message)));
+      document.getElementById("connectBtn").addEventListener("click", () => connectBrowser().catch((error) => setDebug(error.message)));
+      document.getElementById("runBtn").addEventListener("click", () => runBrowser().catch((error) => setDebug(error.message)));
+      document.getElementById("scheduleBtn").addEventListener("click", () => createSchedule().catch((error) => setDebug(error.message)));
+      document.getElementById("refreshTasksBtn").addEventListener("click", () => refreshTasks().catch((error) => setDebug(error.message)));
+      document.getElementById("analyzeListenerBtn").addEventListener("click", () => analyzeListenerSession().catch((error) => setDebug(error.message)));
+      document.getElementById("refreshListenerBtn").addEventListener("click", () => refreshListener().catch((error) => setDebug(error.message)));
+      document.getElementById("clearListenerBtn").addEventListener("click", () => clearListener().catch((error) => setDebug(error.message)));
+
+      setDefaultScheduleTime();
+      loadStatus().catch((error) => setDebug(error.message));
+      refreshListener().catch(() => {});
+      refreshTasks().catch(() => {});
+      setInterval(() => refreshListener().catch(() => {}), 4000);
+    </script>
+  </body>
+</html>

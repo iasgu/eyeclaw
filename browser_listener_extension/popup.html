@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Show Once 监听器</title>
+    <style>
+      body {
+        margin: 0;
+        width: 320px;
+        padding: 16px;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: #1f241f;
+        background: #f7f3e9;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+
+      p {
+        margin: 0 0 12px;
+        color: #596156;
+        line-height: 1.5;
+      }
+
+      label {
+        display: block;
+        margin: 12px 0 6px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #c9d0c5;
+        background: #fffdfa;
+      }
+
+      .status {
+        margin-top: 10px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: #eef5ff;
+        border: 1px solid #d6e7ff;
+        color: #2d4f78;
+        font-size: 12px;
+      }
+
+      button {
+        margin-top: 14px;
+        width: 100%;
+        border: 0;
+        border-radius: 999px;
+        padding: 11px 14px;
+        font-weight: 600;
+        cursor: pointer;
+        color: white;
+        background: #1b7f5d;
+      }
+
+      button.secondary {
+        background: #d96c3f;
+      }
+
+      .hint {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #596156;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Show Once 监听器</h1>
+    <p>这是本地开源扩展，用来采集关键操作、关键事件和关键截图。</p>
+
+    <label for="apiBase">监听器接口地址</label>
+    <input id="apiBase" type="text" />
+
+    <label for="clientName">客户端名称</label>
+    <input id="clientName" type="text" />
+
+    <div class="status" id="statusText">当前状态：未监听</div>
+    <div class="hint" id="sessionId"></div>
+
+    <button id="startBtn">开始监听</button>
+    <button class="secondary" id="stopBtn">停止监听</button>
+    <button id="saveBtn">保存接口设置</button>
+    <button class="secondary" id="resetBtn">重置会话 ID</button>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
