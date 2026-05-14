@@ -1,3 +1,4 @@
+from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -5,6 +6,7 @@ from src.browser_listener import (
     BrowserEventBatchIn,
     BrowserEventStore,
     plan_listener_guided_frames,
+    save_session_recording,
 )
 
 
@@ -151,3 +153,25 @@ def test_plan_listener_guided_frames_uses_event_positions_and_neighbors() -> Non
     assert any("target=Open" in item.hint for item in guided)
     assert any("target=Industry" in item.hint for item in guided)
     assert guided == sorted(guided, key=lambda item: item.timestamp_second)
+
+
+def test_save_session_recording_and_attach_to_store() -> None:
+    with TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        recording_path = save_session_recording("session-rec", "sample.webm", BytesIO(b"video-bytes"))
+
+        store = BrowserEventStore(max_events=5, artifact_root=root / "listener")
+        recording = store.set_session_recording(
+            "session-rec",
+            recording_path=str(recording_path),
+            mime_type="video/webm",
+            tab_id=12,
+            started_at_ms=10,
+            ended_at_ms=30,
+        )
+        summary = store.session_summary("session-rec")
+
+        assert recording_path.exists()
+        assert recording.session_id == "session-rec"
+        assert summary["recording_path"] == str(recording_path)
+        assert summary["recording_started_at_ms"] == 10

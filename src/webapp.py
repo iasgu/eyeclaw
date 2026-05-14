@@ -22,6 +22,7 @@ from src.browser_listener import (
     BrowserEventStore,
     choose_site_url,
     plan_listener_guided_frames,
+    save_session_recording,
     summarize_browser_event,
 )
 from src.config import load_config_status
@@ -99,24 +100,31 @@ async def analyze_video(request: Request) -> JSONResponse:
         return JSONResponse({"error": "Configuration is incomplete."}, status_code=400)
 
     payload = await request.json()
-    video_path = payload.get("video_path") or "website.mp4"
+    video_path = payload.get("video_path") or ""
     user_request = payload.get("user_request") or ""
     start_second = float(payload.get("start_second", 0.0))
     end_second = payload.get("end_second")
     max_frames = int(payload.get("max_frames", 12))
     listener_session_id = payload.get("listener_session_id") or BROWSER_EVENT_STORE.latest_session_id()
 
-    source = Path(video_path)
-    if not source.exists():
-        return JSONResponse({"error": f"Video file not found: {source}"}, status_code=404)
-
-    metadata = get_video_metadata(source)
-    actual_end = float(end_second) if end_second is not None else metadata.duration_seconds
     if not listener_session_id:
         return JSONResponse(
             {"error": "Listener-guided analysis requires a listener session. Start the browser listener first."},
             status_code=400,
         )
+
+    recording = BROWSER_EVENT_STORE.get_session_recording(listener_session_id)
+    source = Path(video_path) if video_path else (Path(recording.recording_path) if recording else None)
+    if source is None:
+        return JSONResponse(
+            {"error": "No video path was provided and the listener session has no recording yet."},
+            status_code=400,
+        )
+    if not source.exists():
+        return JSONResponse({"error": f"Video file not found: {source}"}, status_code=404)
+
+    metadata = get_video_metadata(source)
+    actual_end = float(end_second) if end_second is not None else metadata.duration_seconds
 
     listener_events = BROWSER_EVENT_STORE.session_events(listener_session_id)
     guided_frames = plan_listener_guided_frames(
@@ -287,6 +295,45 @@ async def clear_browser_listener_events(request: Request) -> JSONResponse:
     return JSONResponse({"cleared_count": cleared})
 
 
+async def upload_browser_listener_recording(request: Request) -> JSONResponse:
+    form = await request.form()
+    session_id = str(form.get("session_id") or "").strip()
+    started_at_ms_raw = str(form.get("started_at_ms") or "").strip()
+    ended_at_ms_raw = str(form.get("ended_at_ms") or "").strip()
+    tab_id_raw = str(form.get("tab_id") or "").strip()
+    mime_type = str(form.get("mime_type") or "video/webm").strip() or "video/webm"
+    uploaded = form.get("video")
+
+    if not session_id:
+        return JSONResponse({"error": "session_id is required."}, status_code=400)
+    if not isinstance(uploaded, UploadFile):
+        return JSONResponse({"error": "Missing recorded video file."}, status_code=400)
+
+    recording_path = save_session_recording(session_id, uploaded.filename or "session.webm", uploaded.file)
+    recording = BROWSER_EVENT_STORE.set_session_recording(
+        session_id,
+        recording_path=str(recording_path),
+        mime_type=mime_type,
+        tab_id=int(tab_id_raw) if tab_id_raw.isdigit() else None,
+        started_at_ms=int(started_at_ms_raw) if started_at_ms_raw.isdigit() else None,
+        ended_at_ms=int(ended_at_ms_raw) if ended_at_ms_raw.isdigit() else None,
+    )
+    return JSONResponse(
+        {
+            "session_id": recording.session_id,
+            "recording_path": recording.recording_path,
+            "mime_type": recording.mime_type,
+        }
+    )
+
+
+async def browser_listener_session_summary(request: Request) -> JSONResponse:
+    session_id = str(request.query_params.get("session_id") or "").strip()
+    if not session_id:
+        return JSONResponse({"error": "session_id is required."}, status_code=400)
+    return JSONResponse(BROWSER_EVENT_STORE.session_summary(session_id))
+
+
 async def analyze_browser_listener_session(request: Request) -> JSONResponse:
     status = load_config_status()
     if not status.is_ready or status.config is None:
@@ -347,8 +394,10 @@ routes = [
     Route("/api/browser/connect", connect_live_browser, methods=["POST"]),
     Route("/api/browser/live-run", run_live_workflow, methods=["POST"]),
     Route("/api/browser-listener/status", browser_listener_status, methods=["GET"]),
+    Route("/api/browser-listener/session", browser_listener_session_summary, methods=["GET"]),
     Route("/api/browser-listener/events", browser_listener_events, methods=["GET"]),
     Route("/api/browser-listener/events", ingest_browser_listener_events, methods=["POST"]),
+    Route("/api/browser-listener/session-recording", upload_browser_listener_recording, methods=["POST"]),
     Route("/api/browser-listener/events/clear", clear_browser_listener_events, methods=["POST"]),
     Route("/api/browser-listener/analyze", analyze_browser_listener_session, methods=["POST"]),
     Route("/api/schedules", create_schedule, methods=["POST"]),

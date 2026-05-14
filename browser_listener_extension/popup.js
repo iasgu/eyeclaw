@@ -29,26 +29,29 @@ async function saveSettings() {
 
 async function startListening() {
   const response = await chrome.runtime.sendMessage({
-    type: "show-once-listener-save-settings",
+    type: "show-once-listener-start-session",
     payload: {
       apiBase: els.apiBase.value.trim(),
-      clientName: els.clientName.value.trim(),
-      enabled: true,
-      sessionId: crypto.randomUUID()
+      clientName: els.clientName.value.trim()
     }
   });
+  if (!response || !response.ok) {
+    throw new Error(response && response.error ? response.error : "无法开始监听");
+  }
   render(response.settings);
 }
 
 async function stopListening() {
   const response = await chrome.runtime.sendMessage({
-    type: "show-once-listener-save-settings",
+    type: "show-once-listener-stop-session",
     payload: {
       apiBase: els.apiBase.value.trim(),
-      clientName: els.clientName.value.trim(),
-      enabled: false
+      clientName: els.clientName.value.trim()
     }
   });
+  if (!response || !response.ok) {
+    throw new Error(response && response.error ? response.error : "无法停止监听");
+  }
   render(response.settings);
 }
 

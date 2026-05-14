@@ -22,6 +22,7 @@ const lastScreenshotAtByTab = new Map();
 
 let flushTimer = null;
 let isFlushing = false;
+let activeRecordingSessionId = null;
 
 async function getSettings() {
   const stored = await chrome.storage.local.get(DEFAULT_SETTINGS);
@@ -58,6 +59,64 @@ function trimText(value, limit = 240) {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function ensureOffscreenDocument() {
+  const offscreenUrl = chrome.runtime.getURL("offscreen.html");
+  const existingContexts = await chrome.runtime.getContexts({
+    contextTypes: ["OFFSCREEN_DOCUMENT"],
+    documentUrls: [offscreenUrl]
+  });
+  if (existingContexts.length > 0) {
+    return;
+  }
+  await chrome.offscreen.createDocument({
+    url: "offscreen.html",
+    reasons: ["USER_MEDIA"],
+    justification: "Record the current browser tab for session-based workflow analysis."
+  });
+}
+
+async function getActiveTab() {
+  const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  return tabs && tabs.length ? tabs[0] : null;
+}
+
+async function startRecordingForCurrentTab(settings) {
+  const tab = await getActiveTab();
+  if (!tab || tab.id == null) {
+    throw new Error("No active tab is available to record.");
+  }
+  await ensureOffscreenDocument();
+  const streamId = await chrome.tabCapture.getMediaStreamId({
+    targetTabId: tab.id
+  });
+  const response = await chrome.runtime.sendMessage({
+    target: "offscreen",
+    type: "start-recording",
+    streamId,
+    sessionId: settings.sessionId,
+    apiBase: settings.apiBase,
+    tabId: tab.id
+  });
+  if (!response || !response.ok) {
+    throw new Error(response && response.error ? response.error : "Unable to start offscreen recording.");
+  }
+  activeRecordingSessionId = settings.sessionId;
+}
+
+async function stopRecordingIfActive() {
+  if (!activeRecordingSessionId) {
+    return;
+  }
+  const response = await chrome.runtime.sendMessage({
+    target: "offscreen",
+    type: "stop-recording"
+  });
+  activeRecordingSessionId = null;
+  if (!response || !response.ok) {
+    throw new Error(response && response.error ? response.error : "Unable to stop offscreen recording.");
+  }
 }
 
 function inferKeyCandidate(event) {
@@ -214,6 +273,36 @@ chrome.runtime.onStartup.addListener(async () => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type === "show-once-listener-start-session") {
+    (async () => {
+      const nextSettings = {
+        apiBase: message.payload?.apiBase || DEFAULT_API_BASE,
+        clientName: message.payload?.clientName || "show-once-listener",
+        enabled: true,
+        sessionId: crypto.randomUUID()
+      };
+      await saveSettings(nextSettings);
+      const settings = await getSettings();
+      await startRecordingForCurrentTab(settings);
+      sendResponse({ ok: true, settings });
+    })().catch((error) => sendResponse({ ok: false, error: String(error) }));
+    return true;
+  }
+
+  if (message?.type === "show-once-listener-stop-session") {
+    (async () => {
+      await saveSettings({
+        apiBase: message.payload?.apiBase || DEFAULT_API_BASE,
+        clientName: message.payload?.clientName || "show-once-listener",
+        enabled: false
+      });
+      await stopRecordingIfActive();
+      const settings = await getSettings();
+      sendResponse({ ok: true, settings });
+    })().catch((error) => sendResponse({ ok: false, error: String(error) }));
+    return true;
+  }
+
   if (message?.type === "show-once-listener-event") {
     const tab = sender.tab || null;
     queueEventWithOptionalScreenshot(
@@ -251,6 +340,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ ok: true, settings });
     });
     return true;
+  }
+
+  if (message?.type === "show-once-listener-recording-uploaded") {
+    sendResponse({ ok: true });
+    return false;
   }
 
   return false;

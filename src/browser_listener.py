@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
-from typing import Any, Literal
+from typing import Any, BinaryIO, Literal
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -33,6 +33,7 @@ BrowserEventSource = Literal["extension_background", "extension_content"]
 MAX_STRING_LENGTH = 500
 MAX_DETAILS_ITEMS = 24
 LISTENER_ARTIFACT_DIR = Path("artifacts/listener_frames")
+SESSION_RECORDINGS_DIR = Path("artifacts/session_recordings")
 
 
 def utc_now_iso() -> str:
@@ -175,6 +176,17 @@ class ListenerGuidedFrame:
     event_id: str
 
 
+@dataclass(frozen=True)
+class SessionRecording:
+    session_id: str
+    recording_path: str
+    mime_type: str
+    tab_id: int | None
+    started_at_ms: int | None
+    ended_at_ms: int | None
+    saved_at_iso: str
+
+
 class BrowserEventStore:
     def __init__(self, max_events: int = 800, artifact_root: Path | None = None) -> None:
         self._events: deque[BrowserEvent] = deque(maxlen=max_events)
@@ -182,6 +194,7 @@ class BrowserEventStore:
         self._received_count = 0
         self._artifact_root = artifact_root or LISTENER_ARTIFACT_DIR
         self._artifact_root.mkdir(parents=True, exist_ok=True)
+        self._recordings: dict[str, SessionRecording] = {}
 
     def ingest(self, batch: BrowserEventBatchIn) -> list[BrowserEvent]:
         received_at_iso = utc_now_iso()
@@ -235,12 +248,19 @@ class BrowserEventStore:
             snapshot = list(self._events)
             cleared = len(snapshot)
             self._events.clear()
+            recordings = list(self._recordings.values())
+            self._recordings.clear()
         for event in snapshot:
             if event.screenshot_path:
                 try:
                     Path(event.screenshot_path).unlink(missing_ok=True)
                 except OSError:
                     pass
+        for recording in recordings:
+            try:
+                Path(recording.recording_path).unlink(missing_ok=True)
+            except OSError:
+                pass
         self._remove_empty_session_dirs()
         return cleared
 
@@ -260,8 +280,53 @@ class BrowserEventStore:
     def latest_session_id(self) -> str | None:
         with self._lock:
             if not self._events:
-                return None
+                if not self._recordings:
+                    return None
+                return list(self._recordings.keys())[-1]
             return self._events[-1].session_id
+
+    def set_session_recording(
+        self,
+        session_id: str,
+        *,
+        recording_path: str,
+        mime_type: str,
+        tab_id: int | None,
+        started_at_ms: int | None,
+        ended_at_ms: int | None,
+    ) -> SessionRecording:
+        recording = SessionRecording(
+            session_id=session_id,
+            recording_path=recording_path,
+            mime_type=mime_type,
+            tab_id=tab_id,
+            started_at_ms=started_at_ms,
+            ended_at_ms=ended_at_ms,
+            saved_at_iso=utc_now_iso(),
+        )
+        with self._lock:
+            self._recordings[session_id] = recording
+        return recording
+
+    def get_session_recording(self, session_id: str | None) -> SessionRecording | None:
+        if not session_id:
+            return None
+        with self._lock:
+            return self._recordings.get(session_id)
+
+    def session_summary(self, session_id: str) -> dict[str, Any]:
+        events = self._filtered_snapshot(session_id=session_id)
+        recording = self.get_session_recording(session_id)
+        screenshot_count = sum(1 for event in events if event.screenshot_path)
+        return {
+            "session_id": session_id,
+            "event_count": len(events),
+            "screenshot_count": screenshot_count,
+            "recording_path": recording.recording_path if recording else None,
+            "recording_mime_type": recording.mime_type if recording else None,
+            "recording_started_at_ms": recording.started_at_ms if recording else None,
+            "recording_ended_at_ms": recording.ended_at_ms if recording else None,
+        }
 
     def select_analysis_candidates(self, session_id: str | None = None, limit: int = 8) -> tuple[str | None, list[BrowserEvent]]:
         effective_session_id = session_id or self.latest_session_id()
@@ -287,11 +352,13 @@ class BrowserEventStore:
         with self._lock:
             snapshot = list(self._events)
             received_count = self._received_count
+            recordings = dict(self._recordings)
 
         latest = snapshot[-1] if snapshot else None
         event_counts = Counter(event.event_type for event in snapshot)
         session_counts = Counter(event.session_id for event in snapshot)
         screenshot_count = sum(1 for event in snapshot if event.screenshot_path)
+        latest_recording_session_id = list(recordings.keys())[-1] if recordings else None
 
         return {
             "buffered_events": len(snapshot),
@@ -302,6 +369,8 @@ class BrowserEventStore:
             "active_session_ids": list(session_counts.keys())[-5:],
             "event_type_counts": dict(event_counts),
             "screenshot_event_count": screenshot_count,
+            "recorded_session_count": len(recordings),
+            "latest_recording_session_id": latest_recording_session_id,
         }
 
     def _filtered_snapshot(
@@ -404,6 +473,19 @@ def choose_site_url(events: list[BrowserEvent], fallback_site_url: str) -> str:
         if event.page_url:
             return event.page_url
     return fallback_site_url
+
+
+def save_session_recording(
+    session_id: str,
+    filename: str,
+    stream: BinaryIO,
+) -> Path:
+    target_dir = SESSION_RECORDINGS_DIR / session_id
+    target_dir.mkdir(parents=True, exist_ok=True)
+    suffix = Path(filename).suffix or ".webm"
+    target_path = target_dir / f"session_recording{suffix}"
+    target_path.write_bytes(stream.read())
+    return target_path
 
 
 def plan_listener_guided_frames(

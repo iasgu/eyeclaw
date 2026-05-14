@@ -3,11 +3,17 @@
   "name": "Show Once Listener",
   "version": "0.1.0",
   "description": "Open-source local browser listener for Show Once. Captures navigation, tabs, clicks, inputs, and scrolls.",
-  "permissions": ["activeTab", "storage", "tabs", "webNavigation"],
+  "permissions": ["activeTab", "offscreen", "storage", "tabCapture", "tabs", "webNavigation"],
   "host_permissions": ["<all_urls>", "http://127.0.0.1/*", "http://localhost/*"],
   "background": {
     "service_worker": "service-worker.js"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["offscreen.html", "offscreen.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Show Once Listener"
