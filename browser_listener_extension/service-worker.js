@@ -1,9 +1,9 @@
-const DEFAULT_API_BASE = "http://127.0.0.1:8018";
+const DEFAULT_API_BASE = "http://127.0.0.1:8010";
 const DEFAULT_SETTINGS = {
   apiBase: DEFAULT_API_BASE,
   enabled: false,
   sessionId: crypto.randomUUID(),
-  clientName: "show-once-listener",
+  clientName: "eyeclaw-listener",
   browserName: "edge-or-chrome"
 };
 
@@ -192,7 +192,7 @@ async function maybeAttachScreenshot(event, tab) {
       screenshot_reason: `${event.event_type}:key-candidate`
     };
   } catch (error) {
-    console.warn("Show Once Listener screenshot capture failed", error);
+    console.warn("Eyeclaw Listener screenshot capture failed", error);
     return event;
   }
 }
@@ -240,7 +240,7 @@ async function flushQueue() {
     }
   } catch (error) {
     queue.unshift(...batch);
-    console.warn("Show Once Listener flush failed", error);
+    console.warn("Eyeclaw Listener flush failed", error);
   } finally {
     isFlushing = false;
     if (queue.length > 0) {
@@ -273,27 +273,33 @@ chrome.runtime.onStartup.addListener(async () => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message?.type === "show-once-listener-start-session") {
+  if (message?.type === "eyeclaw-listener-start-session") {
     (async () => {
       const nextSettings = {
         apiBase: message.payload?.apiBase || DEFAULT_API_BASE,
-        clientName: message.payload?.clientName || "show-once-listener",
+        clientName: message.payload?.clientName || "eyeclaw-listener",
         enabled: true,
         sessionId: crypto.randomUUID()
       };
       await saveSettings(nextSettings);
       const settings = await getSettings();
-      await startRecordingForCurrentTab(settings);
-      sendResponse({ ok: true, settings });
+      let recordingWarning = null;
+      try {
+        await startRecordingForCurrentTab(settings);
+      } catch (error) {
+        recordingWarning = String(error);
+        console.warn("Eyeclaw Listener recording could not start, events will still be captured:", recordingWarning);
+      }
+      sendResponse({ ok: true, settings, recording_warning: recordingWarning });
     })().catch((error) => sendResponse({ ok: false, error: String(error) }));
     return true;
   }
 
-  if (message?.type === "show-once-listener-stop-session") {
+  if (message?.type === "eyeclaw-listener-stop-session") {
     (async () => {
       await saveSettings({
         apiBase: message.payload?.apiBase || DEFAULT_API_BASE,
-        clientName: message.payload?.clientName || "show-once-listener",
+        clientName: message.payload?.clientName || "eyeclaw-listener",
         enabled: false
       });
       await stopRecordingIfActive();
@@ -303,7 +309,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  if (message?.type === "show-once-listener-event") {
+  if (message?.type === "eyeclaw-listener-event") {
     const tab = sender.tab || null;
     queueEventWithOptionalScreenshot(
       {
@@ -321,12 +327,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  if (message?.type === "show-once-listener-get-settings") {
+  if (message?.type === "eyeclaw-listener-get-settings") {
     getSettings().then((settings) => sendResponse({ ok: true, settings }));
     return true;
   }
 
-  if (message?.type === "show-once-listener-save-settings") {
+  if (message?.type === "eyeclaw-listener-save-settings") {
     saveSettings(message.payload || {}).then(async () => {
       const settings = await getSettings();
       sendResponse({ ok: true, settings });
@@ -334,7 +340,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  if (message?.type === "show-once-listener-reset-session") {
+  if (message?.type === "eyeclaw-listener-reset-session") {
     saveSettings({ sessionId: crypto.randomUUID() }).then(async () => {
       const settings = await getSettings();
       sendResponse({ ok: true, settings });
@@ -342,7 +348,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  if (message?.type === "show-once-listener-recording-uploaded") {
+  if (message?.type === "eyeclaw-listener-recording-uploaded") {
     sendResponse({ ok: true });
     return false;
   }
@@ -368,7 +374,7 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
       tab
     );
   } catch (error) {
-    console.warn("Show Once Listener tab activation failed", error);
+    console.warn("Eyeclaw Listener tab activation failed", error);
   }
 });
 
@@ -420,7 +426,7 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
       tab
     );
   } catch (error) {
-    console.warn("Show Once Listener navigation event failed", error);
+    console.warn("Eyeclaw Listener navigation event failed", error);
   }
 });
 
@@ -441,6 +447,6 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(async (details) => {
       tab
     );
   } catch (error) {
-    console.warn("Show Once Listener history event failed", error);
+    console.warn("Eyeclaw Listener history event failed", error);
   }
 });

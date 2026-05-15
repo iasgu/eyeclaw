@@ -129,7 +129,7 @@ class BrowserEventIn(BaseModel):
 class BrowserEventBatchIn(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    client_name: str = "show-once-listener"
+    client_name: str = "eyeclaw-listener"
     browser_name: str | None = None
     session_id: str = Field(default_factory=lambda: uuid4().hex)
     events: list[BrowserEventIn]

@@ -1,6 +1,6 @@
-# Show Once
+# Eyeclaw
 
-Show Once is a local hackathon MVP for teaching a browser workflow from a short demo video, turning it into a readable SOP plus a replayable automation plan for Edge.
+Eyeclaw is a local hackathon MVP for teaching a browser workflow from a short demo video, turning it into a readable SOP plus a replayable automation plan for Edge.
 
 ## What It Does
 

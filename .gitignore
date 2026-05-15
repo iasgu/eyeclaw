@@ -1,5 +1,6 @@
 .env
 model.txt
+.claude/
 .venv/
 .browser/
 artifacts/

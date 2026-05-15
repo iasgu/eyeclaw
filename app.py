@@ -32,7 +32,7 @@ from src.video import (
 
 
 st.set_page_config(
-    page_title="Show Once",
+    page_title="Eyeclaw",
     layout="wide",
 )
 
@@ -325,7 +325,7 @@ def render_live_browser_section(config, replay_session, current_cdp_url: str) ->
 
 def main() -> None:
     initialize_state()
-    st.title("Show Once")
+    st.title("Eyeclaw 原型")
     st.write("You do not prompt the browser. You teach it.")
 
     render_config_status()

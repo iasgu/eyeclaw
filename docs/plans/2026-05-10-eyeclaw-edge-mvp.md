@@ -1,4 +1,4 @@
-# Show Once Edge MVP Implementation Plan
+# Eyeclaw Edge MVP Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
@@ -348,7 +348,7 @@ In `DEMO_SCRIPT.md`, script:
 **Step 2: Add one-sentence positioning**
 
 Use:
-- “Show Once, automate later.”
+- “Eyeclaw, automate later.”
 - “You don’t prompt the browser. You teach it.”
 
 **Step 3: Record current environment blockers**

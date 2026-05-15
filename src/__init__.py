@@ -1,1 +1,1 @@
-"""Show Once application package."""
+"""Eyeclaw application package."""

@@ -33,7 +33,7 @@ async function uploadRecording(recording) {
   }
 
   chrome.runtime.sendMessage({
-    type: "show-once-listener-recording-uploaded",
+    type: "eyeclaw-listener-recording-uploaded",
     payload: {
       sessionId: recording.sessionId
     }

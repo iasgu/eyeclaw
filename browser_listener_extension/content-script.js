@@ -77,7 +77,7 @@ function scrubInputValue(target) {
 function emit(payload) {
   try {
     chrome.runtime.sendMessage({
-      type: "show-once-listener-event",
+      type: "eyeclaw-listener-event",
       payload: {
         page_url: location.href,
         page_title: document.title,
@@ -86,7 +86,7 @@ function emit(payload) {
       }
     });
   } catch (error) {
-    console.warn("Show Once Listener emit failed", error);
+    console.warn("Eyeclaw Listener emit failed", error);
   }
 }
 
