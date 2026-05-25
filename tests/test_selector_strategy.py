@@ -8,3 +8,9 @@ def test_build_selector_candidates_prefers_selector_hint_then_text_variants() ->
     assert "text=Search" in candidates
     assert "placeholder=Search" in candidates
     assert "label=Search" in candidates
+
+
+def test_build_selector_candidates_keeps_prefixed_hints_as_is() -> None:
+    candidates = build_selector_candidates("出让公告", "text=出让公告")
+
+    assert candidates[0] == "text=出让公告"

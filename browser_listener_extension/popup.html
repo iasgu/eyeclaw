@@ -49,6 +49,7 @@
         border: 1px solid #d6e7ff;
         color: #2d4f78;
         font-size: 12px;
+        line-height: 1.5;
       }
 
       button {
@@ -61,6 +62,10 @@
         cursor: pointer;
         color: white;
         background: #1b7f5d;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
       }
 
       button.secondary {
@@ -77,7 +82,7 @@
   </head>
   <body>
     <h1>Eyeclaw 监听器</h1>
-    <p>这是本地开源扩展，用来采集关键操作、关键事件和关键截图。</p>
+    <p>本地扩展会采集关键操作、事件时间轴和关键截图。完整“录屏 + 监听”请从 Eyeclaw 前端的“开始演示”启动。</p>
 
     <label for="apiBase">监听器接口地址</label>
     <input id="apiBase" type="text" />
@@ -87,9 +92,11 @@
 
     <div class="status" id="statusText">当前状态：未监听</div>
     <div class="hint" id="sessionId"></div>
+    <div class="hint">浏览器内置页、扩展页、设置页不能被插件直接录屏；这是 Edge/Chrome 的安全限制。</div>
 
     <button id="startBtn">开始监听</button>
     <button class="secondary" id="stopBtn">停止监听</button>
+    <button id="openAppBtn">打开 Eyeclaw 前端录屏</button>
     <button id="saveBtn">保存接口设置</button>
     <button class="secondary" id="resetBtn">重置会话 ID</button>
 

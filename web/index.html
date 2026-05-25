@@ -43,12 +43,17 @@
         gap: 18px;
       }
 
+      .shell > * {
+        min-width: 0;
+      }
+
       .panel {
         background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 20px;
         box-shadow: var(--shadow);
         overflow: hidden;
+        min-width: 0;
       }
 
       .hero {
@@ -121,6 +126,7 @@
         padding: 18px;
         display: grid;
         gap: 16px;
+        min-width: 0;
       }
 
       .section {
@@ -128,6 +134,7 @@
         border-radius: 18px;
         background: var(--panel-soft);
         padding: 16px;
+        min-width: 0;
       }
 
       .section h2 {
@@ -154,6 +161,7 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
+        min-width: 0;
       }
 
       .bubble {
@@ -162,6 +170,8 @@
         border-radius: 16px;
         line-height: 1.6;
         white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .assistant {
@@ -307,12 +317,12 @@
 
       .progress-bar {
         margin-top: 10px;
-        height: 6px;
+        height: 10px;
         border-radius: 999px;
         background: var(--line);
         overflow: hidden;
-        opacity: 0;
-        transition: opacity 200ms ease;
+        opacity: 1;
+        transition: opacity 200ms ease, height 200ms ease;
       }
 
       .progress-bar.active {
@@ -321,21 +331,26 @@
 
       .progress-bar .fill {
         height: 100%;
+        width: 0%;
         border-radius: 999px;
-        background: var(--accent);
-        animation: progressIndeterminate 1.8s ease-in-out infinite;
+        background: linear-gradient(90deg, #6ea8ff 0%, var(--accent) 55%, #9ec2ff 100%);
+        transition: width 280ms linear;
       }
 
-      @keyframes progressIndeterminate {
-        0% { width: 0%; margin-left: 0%; }
-        50% { width: 60%; margin-left: 20%; }
-        100% { width: 0%; margin-left: 100%; }
+      .progress-meta {
+        margin-top: 8px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 13px;
       }
 
       .side {
         display: grid;
         gap: 16px;
         align-content: start;
+        min-width: 0;
       }
 
       .card {
@@ -344,6 +359,7 @@
         border-radius: 18px;
         box-shadow: var(--shadow);
         padding: 18px;
+        min-width: 0;
       }
 
       .card h2 {
@@ -407,6 +423,7 @@
         gap: 10px;
         max-height: 300px;
         overflow: auto;
+        min-width: 0;
       }
 
       .step,
@@ -415,6 +432,9 @@
         border-radius: 14px;
         border: 1px solid var(--line);
         background: #fcfdff;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .step strong,
@@ -506,6 +526,10 @@
             <div class="progress-bar" id="progressBar">
               <div class="fill"></div>
             </div>
+            <div class="progress-meta">
+              <span id="progressStage">等待开始</span>
+              <span id="progressPercent">0%</span>
+            </div>
           </section>
 
           <section class="section">
@@ -544,6 +568,9 @@
                 <button class="secondary" id="connectBtn"><span class="spinner"></span>连接已打开的 Edge</button>
                 <button class="primary" id="runBtn"><span class="spinner"></span>执行实时流程</button>
               </div>
+              <div class="meta" style="margin-top: 10px;">
+                说明：监听器扩展负责采集点击、输入、截图和录屏，供“分析监听会话/分析视频流程”使用；“执行实时流程”默认使用 Browser Use 智能执行器，旧版本地回放只作为备用。`连接已打开的 Edge` 主要用于查看当前本机 CDP 浏览器状态，分析出步骤后可直接执行。
+              </div>
             </div>
           </section>
         </div>
@@ -569,6 +596,10 @@
               <strong>4. 结合视频验证</strong>
               <span>如果要分析 `website.mp4`，必须先有监听会话，再点"分析视频流程"。</span>
             </div>
+            <div class="manual-item">
+              <strong>5. 监听模式如何执行任务</strong>
+              <span>监听模式本身不直接执行网页操作，它的作用是先采集过程并分析出步骤。要执行任务，需要把分析结果保存成技能，再在用户端任务页或控制台执行，执行时仍然走 CDP。</span>
+            </div>
           </div>
         </section>
 
@@ -576,6 +607,11 @@
           <h2>浏览器状态</h2>
           <div class="meta">CDP 地址</div>
           <input id="cdpUrl" type="text" value="http://127.0.0.1:9222" />
+          <div class="meta" style="margin-top: 12px">执行模式</div>
+          <select id="executionMode">
+            <option value="browser_use_live_workflow" selected>Browser Use 智能执行（推荐）</option>
+            <option value="generic_live_workflow">传统 CDP 回放（备用）</option>
+          </select>
           <div style="margin-top: 12px" class="status" id="browserStatus">尚未连接实时浏览器</div>
         </section>
 
@@ -617,6 +653,7 @@
     </main>
 
     <script>
+      const PERSISTENCE_KEY = "eyeclaw.console.state.v1";
       const TEXT = {
         backendReady: "后端配置正常",
         backendNotReady: "后端配置不完整",
@@ -630,6 +667,7 @@
         uploadedVideoPath: "",
         lastPlan: null,
         latestListenerSessionId: "",
+        lastDebug: null,
       };
 
       const els = {
@@ -642,6 +680,7 @@
         endSecond: document.getElementById("endSecond"),
         maxFrames: document.getElementById("maxFrames"),
         cdpUrl: document.getElementById("cdpUrl"),
+        executionMode: document.getElementById("executionMode"),
         browserStatus: document.getElementById("browserStatus"),
         listenerStatus: document.getElementById("listenerStatus"),
         listenerList: document.getElementById("listenerList"),
@@ -651,6 +690,9 @@
         scheduleTime: document.getElementById("scheduleTime"),
         taskList: document.getElementById("taskList"),
         progressBar: document.getElementById("progressBar"),
+        progressFill: document.querySelector("#progressBar .fill"),
+        progressStage: document.getElementById("progressStage"),
+        progressPercent: document.getElementById("progressPercent"),
         uploadBtn: document.getElementById("uploadBtn"),
         analyzeBtn: document.getElementById("analyzeBtn"),
         connectBtn: document.getElementById("connectBtn"),
@@ -667,12 +709,38 @@
         els.analyzeListenerBtn, els.clearListenerBtn, els.scheduleBtn
       ];
 
+      const MIN_PROGRESS_VISIBLE_MS = 900;
+      let progressVisibleAt = 0;
+      let progressHideTimer = null;
+
       function showProgress() {
+        if (progressHideTimer) {
+          window.clearTimeout(progressHideTimer);
+          progressHideTimer = null;
+        }
+        if (!els.progressBar.classList.contains("active")) {
+          progressVisibleAt = Date.now();
+        }
         els.progressBar.classList.add("active");
       }
 
       function hideProgress() {
-        els.progressBar.classList.remove("active");
+        const elapsed = Date.now() - progressVisibleAt;
+        const delay = Math.max(0, MIN_PROGRESS_VISIBLE_MS - elapsed);
+        if (progressHideTimer) {
+          window.clearTimeout(progressHideTimer);
+        }
+        progressHideTimer = window.setTimeout(() => {
+          els.progressBar.classList.remove("active");
+          progressHideTimer = null;
+        }, delay);
+      }
+
+      function setProgress(percent, stage) {
+        const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+        els.progressFill.style.width = `${safePercent}%`;
+        els.progressPercent.textContent = `${safePercent}%`;
+        els.progressStage.textContent = stage || "处理中";
       }
 
       function setButtonsEnabled(enabled) {
@@ -707,13 +775,26 @@
       }
 
       function setDebug(value) {
+        state.lastDebug = value;
         els.debugOutput.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+        persistConsoleState();
       }
 
       function shortText(value, fallback = TEXT.noValue) {
         if (!value) return fallback;
         const text = String(value);
         return text.length > 96 ? `${text.slice(0, 93)}...` : text;
+      }
+
+      function executionModeLabel(taskType) {
+        const normalized = String(taskType || "").trim();
+        if (normalized === "browser_use_live_workflow") {
+          return "Browser Use 智能执行";
+        }
+        if (normalized === "generic_live_workflow") {
+          return "传统 CDP 回放";
+        }
+        return normalized || "Browser Use 智能执行";
       }
 
       function renderSteps(plan) {
@@ -731,6 +812,54 @@
             <div class="meta">${step.value || step.notes || ""}</div>
           `;
           els.stepsPanel.appendChild(node);
+        }
+      }
+
+      function persistConsoleState() {
+        try {
+          window.localStorage.setItem(
+            PERSISTENCE_KEY,
+            JSON.stringify({
+              uploadedVideoPath: state.uploadedVideoPath || "",
+              lastPlan: state.lastPlan || null,
+              latestListenerSessionId: state.latestListenerSessionId || "",
+              lastDebug: state.lastDebug ?? null,
+              executionMode: els.executionMode.value || "browser_use_live_workflow",
+              savedAt: new Date().toISOString(),
+            })
+          );
+        } catch {
+          // localStorage can be unavailable in hardened browser profiles.
+        }
+      }
+
+      function restoreConsoleState() {
+        try {
+          const raw = window.localStorage.getItem(PERSISTENCE_KEY);
+          if (!raw) {
+            return;
+          }
+          const saved = JSON.parse(raw);
+          state.uploadedVideoPath = saved.uploadedVideoPath || "";
+          state.lastPlan = saved.lastPlan || null;
+          state.latestListenerSessionId = saved.latestListenerSessionId || "";
+          state.lastDebug = saved.lastDebug ?? null;
+
+          if (saved.executionMode && els.executionMode.querySelector(`option[value="${saved.executionMode}"]`)) {
+            els.executionMode.value = saved.executionMode;
+          }
+          if (state.uploadedVideoPath) {
+            els.videoPath.value = state.uploadedVideoPath;
+          }
+          if (state.lastPlan) {
+            renderSteps(state.lastPlan);
+          }
+          if (state.lastDebug !== null) {
+            els.debugOutput.textContent =
+              typeof state.lastDebug === "string" ? state.lastDebug : JSON.stringify(state.lastDebug, null, 2);
+          }
+        } catch {
+          window.localStorage.removeItem(PERSISTENCE_KEY);
         }
       }
 
@@ -766,7 +895,10 @@
           data = { error: rawText || `接口 ${path} 返回了非 JSON 数据` };
         }
         if (!response.ok) {
-          throw new Error(data.error || data.message || JSON.stringify(data));
+          const error = new Error(data.error || data.message || JSON.stringify(data));
+          error.status = response.status;
+          error.payload = data;
+          throw error;
         }
         return data;
       }
@@ -822,15 +954,32 @@
         };
         addBubble("user", payload.user_request || "请分析最近一次监听会话。");
         startOperation(btn);
+        setProgress(2, "正在提交监听分析任务");
         try {
-          const data = await api("/api/browser-listener/analyze", {
+          const job = await api("/api/browser-listener/analyze/start", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
+          let data = null;
+          while (true) {
+            const status = await api(`/api/analysis-jobs/status?job_id=${encodeURIComponent(job.job_id)}`);
+            setProgress(status.progress_percent, status.stage);
+            if (status.status === "completed") {
+              setProgress(100, status.stage || "已完成");
+              data = status.result;
+              break;
+            }
+            if (status.status === "failed") {
+              setProgress(status.progress_percent || 100, status.stage || "分析失败");
+              throw new Error(status.error || "监听分析失败");
+            }
+            await new Promise((resolve) => window.setTimeout(resolve, 500));
+          }
           state.lastPlan = data.plan;
           renderSteps(data.plan);
           renderListenerEvents(data.candidate_events || []);
+          persistConsoleState();
           addBubble(
             "assistant",
             `已分析监听会话 ${data.session_id.slice(0, 8)}，共使用 ${data.frame_count} 张候选关键帧。`
@@ -859,6 +1008,7 @@
           const data = await api("/api/upload", { method: "POST", body: form });
           state.uploadedVideoPath = data.video_path;
           els.videoPath.value = data.video_path;
+          persistConsoleState();
           addBubble("assistant", `视频上传完成，时长 ${data.duration_seconds.toFixed(2)} 秒。`);
           setDebug(data);
         } catch (error) {
@@ -873,6 +1023,7 @@
         const userRequest = els.requestInput.value.trim();
         addBubble("user", userRequest || "请基于当前监听会话分析这个视频。");
         startOperation(btn);
+        setProgress(2, "正在提交视频分析任务");
         try {
           const payload = {
             video_path: els.videoPath.value.trim() || state.uploadedVideoPath || "website.mp4",
@@ -882,13 +1033,29 @@
             max_frames: Number(els.maxFrames.value || 12),
             listener_session_id: state.latestListenerSessionId || null,
           };
-          const data = await api("/api/analyze", {
+          const job = await api("/api/analyze/start", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
+          let data = null;
+          while (true) {
+            const status = await api(`/api/analysis-jobs/status?job_id=${encodeURIComponent(job.job_id)}`);
+            setProgress(status.progress_percent, status.stage);
+            if (status.status === "completed") {
+              setProgress(100, status.stage || "已完成");
+              data = status.result;
+              break;
+            }
+            if (status.status === "failed") {
+              setProgress(status.progress_percent || 100, status.stage || "分析失败");
+              throw new Error(status.error || "视频分析失败");
+            }
+            await new Promise((resolve) => window.setTimeout(resolve, 500));
+          }
           state.lastPlan = data.plan;
           renderSteps(data.plan);
+          persistConsoleState();
           addBubble(
             "assistant",
             `已根据监听器引导关键帧完成视频分析，会话 ${String(data.listener_session_id || "").slice(0, 8)} 共生成 ${data.plan.steps.length} 个步骤。`
@@ -905,6 +1072,7 @@
       async function connectBrowser() {
         const btn = els.connectBtn;
         startOperation(btn);
+        setProgress(5, "正在连接浏览器");
         try {
           const payload = { cdp_url: els.cdpUrl.value.trim() };
           const data = await api("/api/browser/connect", {
@@ -912,14 +1080,27 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-          els.browserStatus.textContent = `${data.page_role} - ${data.title}`;
+          setProgress(100, "浏览器已连接");
+          els.browserStatus.textContent = `${data.page_role} - ${data.title || "未命名页面"}`;
           els.browserStatus.className = "status";
-          addBubble("assistant", `已连接实时浏览器，当前状态：${data.page_role}。`);
+          persistConsoleState();
+          addBubble(
+            "assistant",
+            `已连接实时浏览器。\n当前状态：${data.page_role}\n页面标题：${data.title || "未命名页面"}\n页面地址：${data.url || "未知"}`
+          );
           setDebug(data);
         } catch (error) {
+          setProgress(100, "浏览器连接失败");
           els.browserStatus.textContent = `连接失败: ${error.message}`;
           els.browserStatus.className = "status error";
-          addBubble("error", `连接浏览器失败: ${error.message}`);
+          if ((error.message || "").includes("ECONNREFUSED 127.0.0.1:9222")) {
+            addBubble(
+              "error",
+              "连接浏览器失败：127.0.0.1:9222 没有开启。\n请先用带远程调试参数的 Edge 启动浏览器，再回来点一次“连接已打开的 Edge”。"
+            );
+          } else {
+            addBubble("error", `连接浏览器失败: ${error.message}`);
+          }
         } finally {
           endOperation(btn);
         }
@@ -929,19 +1110,60 @@
         const btn = els.runBtn;
         addBubble("assistant", "开始执行实时浏览器流程。");
         startOperation(btn);
+        setProgress(2, "正在提交执行任务");
         try {
-          const data = await api("/api/browser/live-run", {
+          const job = await api("/api/browser/live-run/start", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               cdp_url: els.cdpUrl.value.trim(),
               user_request: els.requestInput.value.trim(),
+              plan: state.lastPlan,
+              task_type: els.executionMode.value,
             }),
           });
-          addBubble("assistant", "实时流程执行完成。");
-          setDebug(data);
+          let finalPayload = null;
+          while (true) {
+            const status = await api(`/api/analysis-jobs/status?job_id=${encodeURIComponent(job.job_id)}`);
+            setProgress(status.progress_percent, status.stage);
+            if (status.result) {
+              finalPayload = status;
+            }
+            if (status.status === "completed") {
+              setProgress(100, status.stage || "执行完成");
+              break;
+            }
+            if (status.status === "manual") {
+              const result = status.result || {};
+              setProgress(status.progress_percent || 92, status.stage || "等待人工处理");
+              addBubble(
+                "assistant",
+                `需要人工接管。\n原因：${status.error || result.message || "请先在浏览器中完成当前步骤"}`
+              );
+              if (Array.isArray(result.logs) && result.logs.length) {
+                addBubble("assistant", `当前进度：\n${result.logs.join("\n")}`);
+              }
+              setDebug(status);
+              return;
+            }
+            if (status.status === "failed") {
+              setProgress(status.progress_percent || 100, status.stage || "执行失败");
+              throw new Error(status.error || "实时流程执行失败");
+            }
+            await new Promise((resolve) => window.setTimeout(resolve, 500));
+          }
+
+          const result = finalPayload?.result || {};
+          addBubble(
+            "assistant",
+            Array.isArray(result.logs) && result.logs.length
+              ? `实时流程执行完成。\n${result.logs.join("\n")}`
+              : "实时流程执行完成。"
+          );
+          setDebug(finalPayload || result);
+          persistConsoleState();
         } catch (error) {
-          addBubble("error", `实时流程未完成: ${error.message}`);
+          addBubble("error", `实时流程未完成：${error.message}`);
           setDebug(error.message);
         } finally {
           endOperation(btn);
@@ -972,9 +1194,10 @@
           const payload = {
             name: els.scheduleName.value.trim(),
             run_at_iso: runAtIso,
-            task_type: "eia_live_workflow",
+            task_type: els.executionMode.value,
             cdp_url: els.cdpUrl.value.trim(),
             user_request: els.requestInput.value.trim(),
+            plan: state.lastPlan,
           };
           const data = await api("/api/schedules", {
             method: "POST",
@@ -1005,6 +1228,7 @@
               <strong>${task.name}</strong>
               <div class="meta">${task.run_at_iso}</div>
               <div class="meta">状态：${task.status}</div>
+              <div class="meta">执行模式：${executionModeLabel(task.task_type || task.payload?.task_type)}</div>
               ${task.last_error ? `<div class="meta">错误：${shortText(task.last_error)}</div>` : ""}
             `;
             els.taskList.appendChild(node);
@@ -1034,7 +1258,9 @@
       els.analyzeListenerBtn.addEventListener("click", () => analyzeListenerSession());
       els.refreshListenerBtn.addEventListener("click", () => refreshListener());
       els.clearListenerBtn.addEventListener("click", () => clearListener());
+      els.executionMode.addEventListener("change", () => persistConsoleState());
 
+      restoreConsoleState();
       setDefaultScheduleTime();
       loadStatus().catch((error) => setDebug(error.message));
       refreshListener().catch(() => {});

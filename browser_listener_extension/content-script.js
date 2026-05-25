@@ -231,3 +231,41 @@ window.addEventListener("popstate", () => {
     }
   });
 });
+
+function isTrustedEyeclawMessage(payload) {
+  if (!payload || payload.source !== "eyeclaw-user-app") {
+    return false;
+  }
+  return [
+    "eyeclaw-listener-start-session-inline",
+    "eyeclaw-listener-stop-session-inline",
+    "eyeclaw-listener-get-settings"
+  ].includes(payload.type);
+}
+
+window.addEventListener("message", (event) => {
+  if (event.source !== window || !isTrustedEyeclawMessage(event.data)) {
+    return;
+  }
+
+  chrome.runtime.sendMessage(
+    {
+      type: event.data.type,
+      payload: event.data.payload || {}
+    },
+    (response) => {
+      const runtimeError = chrome.runtime.lastError;
+      window.postMessage(
+        {
+          source: "eyeclaw-listener-extension",
+          type: `${event.data.type}-response`,
+          ok: !runtimeError && Boolean(response?.ok),
+          response: response || null,
+          error: runtimeError ? runtimeError.message : response?.error || null,
+          requestId: event.data.requestId || null
+        },
+        "*"
+      );
+    }
+  );
+});

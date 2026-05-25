@@ -78,6 +78,25 @@ def parse_eia_request(user_request: str | None) -> EIAFilterSpec:
     return spec
 
 
+def is_supported_eia_state(state: EIAWorkflowState) -> bool:
+    if state.page_role != "unknown":
+        return True
+    haystack = f"{state.title}\n{state.url}\n{state.summary}".lower()
+    return "51dzhp.com" in haystack or "藏经阁" in haystack or "环评" in haystack
+
+
+def unsupported_eia_site_message(state: EIAWorkflowState) -> str:
+    title = state.title or "未命名页面"
+    url = state.url or "未知地址"
+    return (
+        "当前“实时流程”仅支持环评藏经阁 / 大众环评站点，"
+        "你现在连接的不是受支持页面。\n"
+        f"当前页面：{title}\n"
+        f"页面地址：{url}\n"
+        "如果你要操作其他网站，请先用监听模式录制并分析流程，再走技能/任务执行链路。"
+    )
+
+
 def detect_eia_state(session: ReplaySession) -> EIAWorkflowState:
     context = _require_context(session)
     pages = list(enumerate(context.pages))

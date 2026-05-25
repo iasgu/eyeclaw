@@ -1,5 +1,7 @@
 streamlit>=1.45,<2
 playwright>=1.53,<2
+browser-use>=0.12,<0.13
+stagehand>=3.20,<4
 opencv-python-headless>=4.11,<5
 pydantic>=2.11,<3
 pydantic-settings>=2.9,<3

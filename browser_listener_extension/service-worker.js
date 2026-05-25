@@ -1,10 +1,12 @@
-const DEFAULT_API_BASE = "http://127.0.0.1:8010";
+const DEFAULT_API_BASE = "http://127.0.0.1:8018";
 const DEFAULT_SETTINGS = {
   apiBase: DEFAULT_API_BASE,
   enabled: false,
   sessionId: crypto.randomUUID(),
   clientName: "eyeclaw-listener",
-  browserName: "edge-or-chrome"
+  browserName: "edge-or-chrome",
+  recordingState: "idle",
+  recordingTabId: null
 };
 
 const SCREENSHOT_EVENT_TYPES = new Set([
@@ -23,14 +25,43 @@ const lastScreenshotAtByTab = new Map();
 let flushTimer = null;
 let isFlushing = false;
 let activeRecordingSessionId = null;
+let pendingRecordingSettings = null;
+
+function normalizeApiBase(value) {
+  const apiBase = typeof value === "string" && value.trim() ? value.trim() : DEFAULT_API_BASE;
+  return apiBase.replace(/\/+$/, "");
+}
 
 async function getSettings() {
   const stored = await chrome.storage.local.get(DEFAULT_SETTINGS);
-  return { ...DEFAULT_SETTINGS, ...stored };
+  const merged = { ...DEFAULT_SETTINGS, ...stored };
+  merged.apiBase = normalizeApiBase(merged.apiBase);
+  if (merged.apiBase === "http://127.0.0.1:8010") {
+    merged.apiBase = DEFAULT_API_BASE;
+  }
+  if (merged.clientName === "show-once-listener") {
+    merged.clientName = DEFAULT_SETTINGS.clientName;
+  }
+  return merged;
 }
 
 async function saveSettings(patch) {
-  await chrome.storage.local.set(patch);
+  const nextPatch = { ...patch };
+  if (Object.prototype.hasOwnProperty.call(nextPatch, "apiBase")) {
+    nextPatch.apiBase = normalizeApiBase(nextPatch.apiBase);
+  }
+  await chrome.storage.local.set(nextPatch);
+}
+
+async function checkBackend(apiBase) {
+  const response = await fetch(`${normalizeApiBase(apiBase)}/api/browser-listener/status`, {
+    method: "GET",
+    cache: "no-store"
+  });
+  if (!response.ok) {
+    throw new Error(`后端返回 HTTP ${response.status}`);
+  }
+  return response.status;
 }
 
 function scheduleFlush() {
@@ -82,10 +113,37 @@ async function getActiveTab() {
   return tabs && tabs.length ? tabs[0] : null;
 }
 
-async function startRecordingForCurrentTab(settings) {
-  const tab = await getActiveTab();
+function isRecordableTab(tab) {
   if (!tab || tab.id == null) {
-    throw new Error("No active tab is available to record.");
+    return false;
+  }
+  const tabUrl = tab.url || "";
+  return /^https?:\/\//i.test(tabUrl) || /^file:\/\//i.test(tabUrl);
+}
+
+function isEyeclawConsoleTab(tab, apiBase) {
+  const tabUrl = tab?.url || "";
+  if (!tabUrl) {
+    return false;
+  }
+  try {
+    const tabParsed = new URL(tabUrl);
+    const apiParsed = new URL(normalizeApiBase(apiBase));
+    if (tabParsed.origin !== apiParsed.origin) {
+      return false;
+    }
+    return tabParsed.pathname === "/" || tabParsed.pathname === "/app";
+  } catch {
+    return false;
+  }
+}
+
+async function startRecordingForTab(tab, settings) {
+  if (!tab || tab.id == null) {
+    throw new Error("没有可录制的当前标签页，请先切到一个普通网页。");
+  }
+  if (!isRecordableTab(tab)) {
+    throw new Error("当前标签页不能录制，请切到普通网页后再开始监听。");
   }
   await ensureOffscreenDocument();
   const streamId = await chrome.tabCapture.getMediaStreamId({
@@ -103,9 +161,58 @@ async function startRecordingForCurrentTab(settings) {
     throw new Error(response && response.error ? response.error : "Unable to start offscreen recording.");
   }
   activeRecordingSessionId = settings.sessionId;
+  pendingRecordingSettings = null;
+  await saveSettings({
+    recordingState: "recording",
+    recordingTabId: tab.id
+  });
+}
+
+async function startRecordingForCurrentTab(settings) {
+  const tab = await getActiveTab();
+  await startRecordingForTab(tab, settings);
+}
+
+async function startRecordingForNextRecordableTab(settings) {
+  pendingRecordingSettings = settings;
+  await saveSettings({
+    ...settings,
+    enabled: true,
+    recordingState: "pending",
+    recordingTabId: null
+  });
+
+  const activeTab = await getActiveTab();
+  if (activeTab && isRecordableTab(activeTab) && !isEyeclawConsoleTab(activeTab, settings.apiBase)) {
+    try {
+      await startRecordingForTab(activeTab, settings);
+    } catch (error) {
+      console.warn("Eyeclaw Listener active tab recording deferred", error);
+    }
+  }
+}
+
+async function maybeStartPendingRecordingForTab(tab) {
+  const settings = pendingRecordingSettings || (await getSettings());
+  if (settings.recordingState !== "pending" || !settings.enabled) {
+    return;
+  }
+  if (activeRecordingSessionId === settings.sessionId) {
+    return;
+  }
+  if (!isRecordableTab(tab) || isEyeclawConsoleTab(tab, settings.apiBase)) {
+    return;
+  }
+
+  try {
+    await startRecordingForTab(tab, settings);
+  } catch (error) {
+    console.warn("Eyeclaw Listener pending recording start failed", error);
+  }
 }
 
 async function stopRecordingIfActive() {
+  pendingRecordingSettings = null;
   if (!activeRecordingSessionId) {
     return;
   }
@@ -113,10 +220,14 @@ async function stopRecordingIfActive() {
     target: "offscreen",
     type: "stop-recording"
   });
-  activeRecordingSessionId = null;
   if (!response || !response.ok) {
     throw new Error(response && response.error ? response.error : "Unable to stop offscreen recording.");
   }
+  activeRecordingSessionId = null;
+  await saveSettings({
+    recordingState: "idle",
+    recordingTabId: null
+  });
 }
 
 function inferKeyCandidate(event) {
@@ -276,33 +387,98 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "eyeclaw-listener-start-session") {
     (async () => {
       const nextSettings = {
-        apiBase: message.payload?.apiBase || DEFAULT_API_BASE,
+        apiBase: normalizeApiBase(message.payload?.apiBase),
         clientName: message.payload?.clientName || "eyeclaw-listener",
-        enabled: true,
-        sessionId: crypto.randomUUID()
+        enabled: false,
+        sessionId: crypto.randomUUID(),
+        recordingState: "idle",
+        recordingTabId: null
       };
-      await saveSettings(nextSettings);
-      const settings = await getSettings();
+      await checkBackend(nextSettings.apiBase);
+      await stopRecordingIfActive();
       let recordingWarning = null;
       try {
-        await startRecordingForCurrentTab(settings);
+        await startRecordingForCurrentTab(nextSettings);
+        const enabledSettings = { ...nextSettings, enabled: true, recordingState: "recording" };
+        await saveSettings(enabledSettings);
       } catch (error) {
         recordingWarning = String(error);
-        console.warn("Eyeclaw Listener recording could not start, events will still be captured:", recordingWarning);
+        console.warn("Eyeclaw Listener recording deferred until a normal web page is active:", error);
+        await startRecordingForNextRecordableTab(nextSettings);
       }
+      const settings = await getSettings();
       sendResponse({ ok: true, settings, recording_warning: recordingWarning });
+    })().catch((error) => sendResponse({ ok: false, error: String(error) }));
+    return true;
+  }
+
+  if (message?.type === "eyeclaw-listener-start-session-inline") {
+    (async () => {
+      const nextSettings = {
+        apiBase: normalizeApiBase(message.payload?.apiBase),
+        clientName: message.payload?.clientName || "eyeclaw-listener",
+        enabled: true,
+        sessionId: message.payload?.sessionId || crypto.randomUUID(),
+        recordingState: "idle",
+        recordingTabId: null
+      };
+      await checkBackend(nextSettings.apiBase);
+      await stopRecordingIfActive();
+      if (message.payload?.recordingMode === "next-recordable-tab") {
+        await startRecordingForNextRecordableTab(nextSettings);
+      } else {
+        await saveSettings(nextSettings);
+      }
+      const settings = await getSettings();
+      sendResponse({ ok: true, settings });
     })().catch((error) => sendResponse({ ok: false, error: String(error) }));
     return true;
   }
 
   if (message?.type === "eyeclaw-listener-stop-session") {
     (async () => {
+      const currentSettings = await getSettings();
+      const nextApiBase = normalizeApiBase(message.payload?.apiBase);
+      const nextClientName = message.payload?.clientName || "eyeclaw-listener";
       await saveSettings({
-        apiBase: message.payload?.apiBase || DEFAULT_API_BASE,
-        clientName: message.payload?.clientName || "eyeclaw-listener",
-        enabled: false
+        apiBase: nextApiBase,
+        clientName: nextClientName
       });
       await stopRecordingIfActive();
+      await saveSettings({
+        apiBase: nextApiBase,
+        clientName: nextClientName,
+        browserName: currentSettings.browserName || DEFAULT_SETTINGS.browserName,
+        sessionId: currentSettings.sessionId,
+        enabled: false,
+        recordingState: "idle",
+        recordingTabId: null
+      });
+      const settings = await getSettings();
+      sendResponse({ ok: true, settings });
+    })().catch((error) => sendResponse({ ok: false, error: String(error) }));
+    return true;
+  }
+
+  if (message?.type === "eyeclaw-listener-stop-session-inline") {
+    (async () => {
+      const currentSettings = await getSettings();
+      const nextApiBase = normalizeApiBase(message.payload?.apiBase);
+      const nextClientName = message.payload?.clientName || "eyeclaw-listener";
+      await saveSettings({
+        apiBase: nextApiBase,
+        clientName: nextClientName
+      });
+      await stopRecordingIfActive();
+      await saveSettings({
+        apiBase: nextApiBase,
+        clientName: nextClientName,
+        browserName: currentSettings.browserName || DEFAULT_SETTINGS.browserName,
+        sessionId: currentSettings.sessionId,
+        enabled: false,
+        recordingState: "idle",
+        recordingTabId: null
+      });
       const settings = await getSettings();
       sendResponse({ ok: true, settings });
     })().catch((error) => sendResponse({ ok: false, error: String(error) }));
@@ -340,6 +516,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message?.type === "eyeclaw-listener-check-backend") {
+    (async () => {
+      const status = await checkBackend(message.payload?.apiBase || DEFAULT_API_BASE);
+      sendResponse({ ok: true, status });
+    })().catch((error) => sendResponse({ ok: false, error: String(error) }));
+    return true;
+  }
+
   if (message?.type === "eyeclaw-listener-reset-session") {
     saveSettings({ sessionId: crypto.randomUUID() }).then(async () => {
       const settings = await getSettings();
@@ -359,6 +543,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   try {
     const tab = await chrome.tabs.get(tabId);
+    await maybeStartPendingRecordingForTab(tab);
     await emitBackgroundEvent(
       {
         event_type: "tab_activated",
@@ -388,6 +573,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     return;
   }
 
+  await maybeStartPendingRecordingForTab(tab);
   await emitBackgroundEvent(
     {
       event_type: "tab_updated",

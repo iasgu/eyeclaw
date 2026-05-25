@@ -20,7 +20,7 @@ This folder is the browser listener extension for Eyeclaw.
 
 The extension posts batched events to:
 
-`http://127.0.0.1:8010/api/browser-listener/events`
+`http://127.0.0.1:8018/api/browser-listener/events`
 
 You can change the API base and toggle the listener from the popup.
 
@@ -33,3 +33,4 @@ The Eyeclaw web console can then analyze the latest listener session through:
 - Input values are trimmed and password inputs are ignored.
 - Events stay local unless you point the popup at another backend URL.
 - This is designed to complement the existing multimodal workflow in Eyeclaw.
+- Starting a session is now strict: if tab recording cannot start, the listener session should fail instead of continuing in a partial state.

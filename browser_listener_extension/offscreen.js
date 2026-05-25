@@ -46,28 +46,31 @@ async function stopCurrentRecording() {
   }
 
   const active = currentRecording;
-  currentRecording = null;
 
-  if (active.recorder && active.recorder.state !== "inactive") {
-    await new Promise((resolve) => {
-      active.recorder.addEventListener(
-        "stop",
-        () => {
-          resolve();
-        },
-        { once: true }
-      );
-      active.recorder.stop();
-    });
+  if (!active.blob) {
+    if (active.recorder && active.recorder.state !== "inactive") {
+      await new Promise((resolve) => {
+        active.recorder.addEventListener(
+          "stop",
+          () => {
+            resolve();
+          },
+          { once: true }
+        );
+        active.recorder.stop();
+      });
+    }
+
+    if (active.stream) {
+      active.stream.getTracks().forEach((track) => track.stop());
+    }
+
+    active.endedAtMs = Date.now();
+    active.blob = new Blob(active.chunks, { type: active.mimeType || "video/webm" });
   }
 
-  if (active.stream) {
-    active.stream.getTracks().forEach((track) => track.stop());
-  }
-
-  active.endedAtMs = Date.now();
-  active.blob = new Blob(active.chunks, { type: active.mimeType || "video/webm" });
   await uploadRecording(active);
+  currentRecording = null;
 }
 
 async function startRecording(message) {

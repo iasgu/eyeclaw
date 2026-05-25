@@ -1,8 +1,42 @@
 .env
+.env.*
+!.env.example
 model.txt
+
+# Local agent/editor state
 .claude/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Python
 .venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Runtime browser and recording data
 .browser/
 artifacts/
-__pycache__/
-*.pyc
+*.webm
+*.mp4.tmp
+
+# Local runtime configuration and generated skills
+config/mcporter.json
+config/user_skills.json
+
+# Browser downloads accidentally produced during replay/listener tests
+browser_listener_extension/*.pdf
+
+# Generated office exports; keep Markdown sources in git
+docs/*.docx
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/

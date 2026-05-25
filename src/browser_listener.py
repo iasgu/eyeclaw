@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import json
 from collections import Counter, deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -34,6 +35,21 @@ MAX_STRING_LENGTH = 500
 MAX_DETAILS_ITEMS = 24
 LISTENER_ARTIFACT_DIR = Path("artifacts/listener_frames")
 SESSION_RECORDINGS_DIR = Path("artifacts/session_recordings")
+EYECLAW_CONSOLE_HOSTS = {
+    "127.0.0.1:8018",
+    "localhost:8018",
+    "127.0.0.1:8021",
+    "localhost:8021",
+}
+SEARCH_ENGINE_HOST_MARKERS = {
+    "bing.",
+    "baidu.",
+    "google.",
+    "sogou.",
+    "so.com",
+    "sm.cn",
+    "yahoo.",
+}
 
 
 def utc_now_iso() -> str:
@@ -195,16 +211,18 @@ class BrowserEventStore:
         self._artifact_root = artifact_root or LISTENER_ARTIFACT_DIR
         self._artifact_root.mkdir(parents=True, exist_ok=True)
         self._recordings: dict[str, SessionRecording] = {}
+        self._persisted_session_cache: dict[str, list[BrowserEvent]] = {}
 
     def ingest(self, batch: BrowserEventBatchIn) -> list[BrowserEvent]:
         received_at_iso = utc_now_iso()
         accepted: list[BrowserEvent] = []
         for raw_event in batch.events:
             event_id = uuid4().hex
+            is_internal_event = is_eyeclaw_console_event(raw_event)
             screenshot_path = self._persist_screenshot(
                 session_id=batch.session_id,
                 event_id=event_id,
-                screenshot_data_url=raw_event.screenshot_data_url,
+                screenshot_data_url=None if is_internal_event else raw_event.screenshot_data_url,
             )
             accepted.append(
                 BrowserEvent(
@@ -230,7 +248,7 @@ class BrowserEventStore:
                     delta_x=raw_event.delta_x,
                     delta_y=raw_event.delta_y,
                     client_timestamp_ms=raw_event.client_timestamp_ms,
-                    is_key_candidate=infer_key_candidate(raw_event),
+                    is_key_candidate=False if is_internal_event else infer_key_candidate(raw_event),
                     screenshot_path=str(screenshot_path) if screenshot_path else None,
                     screenshot_reason=raw_event.screenshot_reason,
                     details=raw_event.details,
@@ -240,6 +258,11 @@ class BrowserEventStore:
         with self._lock:
             self._events.extend(accepted)
             self._received_count += len(accepted)
+            # Force future session-specific reads to rehydrate from disk so
+            # older persisted events and newly ingested events stay in sync.
+            self._persisted_session_cache.pop(batch.session_id, None)
+
+        self._persist_session_events(batch.session_id, accepted)
 
         return accepted
 
@@ -250,6 +273,12 @@ class BrowserEventStore:
             self._events.clear()
             recordings = list(self._recordings.values())
             self._recordings.clear()
+            session_ids = {
+                *(event.session_id for event in snapshot),
+                *(recording.session_id for recording in recordings),
+                *self._persisted_session_cache.keys(),
+            }
+            self._persisted_session_cache.clear()
         for event in snapshot:
             if event.screenshot_path:
                 try:
@@ -261,6 +290,9 @@ class BrowserEventStore:
                 Path(recording.recording_path).unlink(missing_ok=True)
             except OSError:
                 pass
+        for session_id in session_ids:
+            self._session_events_path(session_id).unlink(missing_ok=True)
+            self._session_recording_metadata_path(session_id).unlink(missing_ok=True)
         self._remove_empty_session_dirs()
         return cleared
 
@@ -280,10 +312,15 @@ class BrowserEventStore:
     def latest_session_id(self) -> str | None:
         with self._lock:
             if not self._events:
-                if not self._recordings:
-                    return None
-                return list(self._recordings.keys())[-1]
-            return self._events[-1].session_id
+                recordings = dict(self._recordings)
+            else:
+                return self._events[-1].session_id
+        if recordings:
+            return sorted(recordings.values(), key=lambda item: item.saved_at_iso)[-1].session_id
+        persisted_recordings = self.list_session_recordings(limit=1)
+        if persisted_recordings:
+            return persisted_recordings[0].session_id
+        return None
 
     def set_session_recording(
         self,
@@ -306,27 +343,71 @@ class BrowserEventStore:
         )
         with self._lock:
             self._recordings[session_id] = recording
+        self._persist_session_recording_metadata(recording)
         return recording
 
     def get_session_recording(self, session_id: str | None) -> SessionRecording | None:
         if not session_id:
             return None
         with self._lock:
-            return self._recordings.get(session_id)
+            cached = self._recordings.get(session_id)
+        if cached is not None:
+            return cached
+        restored = self._load_persisted_session_recording(session_id)
+        if restored is not None:
+            with self._lock:
+                self._recordings[session_id] = restored
+        return restored
+
+    def remove_session_recording(self, session_id: str | None) -> SessionRecording | None:
+        if not session_id:
+            return None
+        recording = self.get_session_recording(session_id)
+        with self._lock:
+            self._recordings.pop(session_id, None)
+        self._session_recording_metadata_path(session_id).unlink(missing_ok=True)
+        return recording
+
+    def list_session_recordings(self, limit: int = 20) -> list[SessionRecording]:
+        capped_limit = max(1, min(limit, 100))
+        with self._lock:
+            recordings = {recording.session_id: recording for recording in self._recordings.values()}
+        for recording in self._load_all_persisted_session_recordings():
+            recordings.setdefault(recording.session_id, recording)
+        ordered = list(recordings.values())
+        ordered.sort(key=lambda recording: recording.saved_at_iso, reverse=True)
+        return ordered[:capped_limit]
 
     def session_summary(self, session_id: str) -> dict[str, Any]:
         events = self._filtered_snapshot(session_id=session_id)
         recording = self.get_session_recording(session_id)
         screenshot_count = sum(1 for event in events if event.screenshot_path)
+        key_event_count = sum(1 for event in events if event.is_key_candidate)
+        last_event = events[-1] if events else None
+        has_recording = recording is not None and Path(recording.recording_path).exists()
+        has_screenshots = screenshot_count > 0
         return {
             "session_id": session_id,
             "event_count": len(events),
+            "key_event_count": key_event_count,
             "screenshot_count": screenshot_count,
+            "has_recording": has_recording,
+            "has_screenshots": has_screenshots,
+            "listener_analysis_ready": has_screenshots,
+            "session_recording_ready": has_recording,
             "recording_path": recording.recording_path if recording else None,
             "recording_mime_type": recording.mime_type if recording else None,
             "recording_started_at_ms": recording.started_at_ms if recording else None,
             "recording_ended_at_ms": recording.ended_at_ms if recording else None,
+            "last_event_type": last_event.event_type if last_event else None,
+            "last_event_at_iso": last_event.received_at_iso if last_event else None,
         }
+
+    def latest_session_summary(self) -> dict[str, Any] | None:
+        latest_session_id = self.latest_session_id()
+        if not latest_session_id:
+            return None
+        return self.session_summary(latest_session_id)
 
     def select_analysis_candidates(self, session_id: str | None = None, limit: int = 8) -> tuple[str | None, list[BrowserEvent]]:
         effective_session_id = session_id or self.latest_session_id()
@@ -371,6 +452,7 @@ class BrowserEventStore:
             "screenshot_event_count": screenshot_count,
             "recorded_session_count": len(recordings),
             "latest_recording_session_id": latest_recording_session_id,
+            "latest_session_summary": self.latest_session_summary(),
         }
 
     def _filtered_snapshot(
@@ -382,10 +464,109 @@ class BrowserEventStore:
         with self._lock:
             snapshot = list(self._events)
         if session_id:
-            snapshot = [event for event in snapshot if event.session_id == session_id]
+            memory_events = [event for event in snapshot if event.session_id == session_id]
+            persisted_events = self._load_persisted_session_events(session_id)
+            snapshot = _merge_browser_events(memory_events, persisted_events)
         if only_with_screenshots:
             snapshot = [event for event in snapshot if event.screenshot_path]
         return snapshot
+
+    def _session_artifact_dir(self, session_id: str) -> Path:
+        return self._artifact_root / session_id
+
+    def _session_events_path(self, session_id: str) -> Path:
+        return self._session_artifact_dir(session_id) / "events.jsonl"
+
+    def _session_recording_metadata_path(self, session_id: str) -> Path:
+        return self._session_artifact_dir(session_id) / "recording.json"
+
+    def _persist_session_events(self, session_id: str, events: list[BrowserEvent]) -> None:
+        if not events:
+            return
+        target_dir = self._session_artifact_dir(session_id)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        event_path = self._session_events_path(session_id)
+        with event_path.open("a", encoding="utf-8") as handle:
+            for event in events:
+                handle.write(json.dumps(event.model_dump(mode="json"), ensure_ascii=False))
+                handle.write("\n")
+
+    def _load_persisted_session_events(self, session_id: str) -> list[BrowserEvent]:
+        with self._lock:
+            cached = self._persisted_session_cache.get(session_id)
+        if cached is not None:
+            return list(cached)
+
+        event_path = self._session_events_path(session_id)
+        if not event_path.exists():
+            return []
+
+        restored: list[BrowserEvent] = []
+        try:
+            with event_path.open("r", encoding="utf-8") as handle:
+                for raw_line in handle:
+                    line = raw_line.strip()
+                    if not line:
+                        continue
+                    try:
+                        restored.append(BrowserEvent.model_validate_json(line))
+                    except ValueError:
+                        continue
+        except OSError:
+            return []
+
+        with self._lock:
+            self._persisted_session_cache[session_id] = restored
+        return list(restored)
+
+    def _persist_session_recording_metadata(self, recording: SessionRecording) -> None:
+        target_dir = self._session_artifact_dir(recording.session_id)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "session_id": recording.session_id,
+            "recording_path": recording.recording_path,
+            "mime_type": recording.mime_type,
+            "tab_id": recording.tab_id,
+            "started_at_ms": recording.started_at_ms,
+            "ended_at_ms": recording.ended_at_ms,
+            "saved_at_iso": recording.saved_at_iso,
+        }
+        self._session_recording_metadata_path(recording.session_id).write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    def _load_persisted_session_recording(self, session_id: str) -> SessionRecording | None:
+        metadata_path = self._session_recording_metadata_path(session_id)
+        if not metadata_path.exists():
+            return None
+        try:
+            payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        if not isinstance(payload, dict):
+            return None
+        try:
+            return SessionRecording(
+                session_id=str(payload["session_id"]),
+                recording_path=str(payload["recording_path"]),
+                mime_type=str(payload.get("mime_type") or "video/webm"),
+                tab_id=payload.get("tab_id"),
+                started_at_ms=payload.get("started_at_ms"),
+                ended_at_ms=payload.get("ended_at_ms"),
+                saved_at_iso=str(payload.get("saved_at_iso") or utc_now_iso()),
+            )
+        except KeyError:
+            return None
+
+    def _load_all_persisted_session_recordings(self) -> list[SessionRecording]:
+        restored: list[SessionRecording] = []
+        for metadata_path in self._artifact_root.glob("*/recording.json"):
+            session_id = metadata_path.parent.name
+            recording = self._load_persisted_session_recording(session_id)
+            if recording is not None:
+                restored.append(recording)
+        return restored
 
     def _persist_screenshot(self, session_id: str, event_id: str, screenshot_data_url: str | None) -> Path | None:
         if not screenshot_data_url:
@@ -444,6 +625,24 @@ def infer_key_candidate(event: BrowserEventIn) -> bool:
     return False
 
 
+def _merge_browser_events(primary: list[BrowserEvent], secondary: list[BrowserEvent]) -> list[BrowserEvent]:
+    merged: list[BrowserEvent] = []
+    seen_ids: set[str] = set()
+    for event in [*secondary, *primary]:
+        if event.event_id in seen_ids:
+            continue
+        seen_ids.add(event.event_id)
+        merged.append(event)
+    merged.sort(
+        key=lambda event: (
+            int(event.client_timestamp_ms or 0),
+            event.received_at_iso,
+            event.event_id,
+        )
+    )
+    return merged
+
+
 def summarize_browser_event(event: BrowserEvent) -> str:
     parts = [event.event_type]
     if event.target_text:
@@ -469,10 +668,42 @@ def summarize_browser_event(event: BrowserEvent) -> str:
 
 
 def choose_site_url(events: list[BrowserEvent], fallback_site_url: str) -> str:
-    for event in events:
-        if event.page_url:
-            return event.page_url
+    urls = [event.page_url for event in events if event.page_url]
+    usable_urls = [url for url in urls if url and not is_eyeclaw_console_url(url)]
+    business_urls = [url for url in usable_urls if not is_search_engine_url(url)]
+    if business_urls:
+        return business_urls[0]
+    if usable_urls:
+        return usable_urls[0]
     return fallback_site_url
+
+
+def is_eyeclaw_console_url(raw_url: str | None) -> bool:
+    if not raw_url:
+        return False
+    lowered = raw_url.strip().lower()
+    if lowered.startswith(("edge://", "chrome://", "devtools://", "chrome-extension://")):
+        return True
+    parsed = urlparse(lowered)
+    return parsed.netloc in EYECLAW_CONSOLE_HOSTS
+
+
+def is_eyeclaw_console_event(event: BrowserEventIn | BrowserEvent) -> bool:
+    if is_eyeclaw_console_url(getattr(event, "page_url", None)):
+        return True
+    combined = " ".join(
+        str(getattr(event, field_name, "") or "")
+        for field_name in ("page_title", "target_text", "target_selector")
+    )
+    lowered = combined.lower()
+    return "eyeclaw" in lowered or "127.0.0.1:8018" in lowered or "localhost:8018" in lowered
+
+
+def is_search_engine_url(raw_url: str | None) -> bool:
+    if not raw_url:
+        return False
+    host = urlparse(raw_url).netloc.lower()
+    return any(marker in host for marker in SEARCH_ENGINE_HOST_MARKERS)
 
 
 def save_session_recording(
@@ -493,11 +724,21 @@ def plan_listener_guided_frames(
     start_second: float,
     end_second: float,
     max_frames: int,
+    recording: SessionRecording | None = None,
 ) -> list[ListenerGuidedFrame]:
     if max_frames <= 0 or end_second < start_second:
         return []
 
     key_events = [event for event in events if event.is_key_candidate]
+    if not key_events:
+        key_events = [
+            event
+            for event in events
+            if event.screenshot_path
+            or event.target_text
+            or event.input_value
+            or event.page_url
+        ]
     if not key_events:
         return []
 
@@ -512,18 +753,40 @@ def plan_listener_guided_frames(
             )
         ]
 
-    normalized_positions = _normalized_event_positions(key_events)
     neighbor_window = min(max(segment_duration / 30.0, 0.45), 1.2)
     min_gap = min(max(segment_duration / 80.0, 0.2), 0.6)
 
-    center_candidates = [
-        _frame_candidate(
-            event=event,
-            second=_clamp_round(start_second + position * segment_duration, start_second, end_second),
-            relative="center",
-        )
-        for event, position in zip(key_events, normalized_positions)
-    ]
+    relative_seconds = _recording_relative_seconds(
+        key_events,
+        recording=recording,
+        start_second=start_second,
+        end_second=end_second,
+    )
+
+    if relative_seconds is None:
+        normalized_positions = _normalized_event_positions(key_events)
+        center_candidates = [
+            _frame_candidate(
+                event=event,
+                second=_clamp_round(start_second + position * segment_duration, start_second, end_second),
+                relative="center",
+            )
+            for event, position in zip(key_events, normalized_positions)
+        ]
+    else:
+        center_candidates = [
+            _frame_candidate(
+                event=event,
+                second=_clamp_round(second, start_second, end_second),
+                relative="center",
+            )
+            for event, second in zip(key_events, relative_seconds)
+            if start_second <= second <= end_second
+        ]
+
+    if not center_candidates:
+        return []
+
     chosen = _take_spaced_candidates(center_candidates, max_frames=max_frames, min_gap=min_gap)
 
     if len(chosen) < max_frames:
@@ -559,12 +822,34 @@ def plan_listener_guided_frames(
 
 
 def _events_are_redundant(previous: BrowserEvent, current: BrowserEvent) -> bool:
+    if _should_preserve_menu_chain(previous, current):
+        return False
     return (
         previous.event_type == current.event_type
         and previous.page_url == current.page_url
         and previous.target_text == current.target_text
         and previous.target_selector == current.target_selector
     )
+
+
+def _should_preserve_menu_chain(previous: BrowserEvent, current: BrowserEvent) -> bool:
+    if previous.event_type != "click" or current.event_type != "click":
+        return False
+    if previous.page_url != current.page_url:
+        return False
+
+    previous_target = trim_text(previous.target_text or previous.target_selector or "", limit=MAX_STRING_LENGTH)
+    current_target = trim_text(current.target_text or current.target_selector or "", limit=MAX_STRING_LENGTH)
+    if not previous_target or not current_target:
+        return False
+    if previous_target == current_target:
+        return False
+
+    previous_ts = previous.client_timestamp_ms
+    current_ts = current.client_timestamp_ms
+    if previous_ts is None or current_ts is None:
+        return True
+    return 0 <= (current_ts - previous_ts) <= 2000
 
 
 def _normalized_event_positions(events: list[BrowserEvent]) -> list[float]:
@@ -586,6 +871,51 @@ def _normalized_event_positions(events: list[BrowserEvent]) -> list[float]:
         return [0.5]
 
     return [index / (len(events) - 1) for index, _ in enumerate(events)]
+
+
+def _recording_relative_seconds(
+    events: list[BrowserEvent],
+    *,
+    recording: SessionRecording | None,
+    start_second: float,
+    end_second: float,
+) -> list[float] | None:
+    if recording is None or recording.started_at_ms is None:
+        return None
+
+    timestamped_events = [event for event in events if event.client_timestamp_ms is not None]
+    if not timestamped_events:
+        return None
+
+    start_ms = recording.started_at_ms
+    end_ms = recording.ended_at_ms
+    duration_ms = end_ms - start_ms if end_ms is not None else None
+
+    candidates: list[float] = []
+    matched_count = 0
+    for event in events:
+        if event.client_timestamp_ms is None:
+            candidates.append(float("nan"))
+            continue
+        relative_ms = event.client_timestamp_ms - start_ms
+        if duration_ms is not None and -30_000 <= relative_ms <= duration_ms + 30_000:
+            matched_count += 1
+            candidates.append(max(0.0, relative_ms / 1000.0))
+        else:
+            candidates.append(float("nan"))
+
+    if matched_count == 0:
+        return None
+
+    resolved: list[float] = []
+    fallback_positions = _normalized_event_positions(events)
+    segment_duration = max(0.0, end_second - start_second)
+    for index, second in enumerate(candidates):
+        if second == second:
+            resolved.append(second)
+        else:
+            resolved.append(start_second + fallback_positions[index] * segment_duration)
+    return resolved
 
 
 def _clamp_round(value: float, start_second: float, end_second: float) -> float:

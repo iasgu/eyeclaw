@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>通过浏览器演示快速创建智能体技能</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #eef4fb;
+        --panel: rgba(255, 255, 255, 0.94);
+        --line: #d7e5f5;
+        --text: #16324a;
+        --muted: #617d95;
+        --accent: #2369e9;
+        --accent-strong: #1653bc;
+        --accent-soft: #ebf3ff;
+        --success: #16794c;
+        --success-soft: #e8f7ef;
+        --warn: #ab6400;
+        --warn-soft: #fff3df;
+        --danger: #ba3838;
+        --danger-soft: #ffe9e9;
+        --shadow: 0 20px 60px rgba(25, 68, 121, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(35, 105, 233, 0.18), transparent 28%),
+          linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      }
+
+      .page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 28px 20px 56px;
+      }
+
+      .hero,
+      .panel,
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .hero {
+        padding: 28px;
+      }
+
+      .hero-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: flex-start;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+
+      h2 {
+        font-size: 22px;
+        margin-bottom: 8px;
+      }
+
+      h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+
+      p {
+        margin: 10px 0 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .badge-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1px solid transparent;
+      }
+
+      .badge.info {
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+      }
+
+      .badge.success {
+        background: var(--success-soft);
+        color: var(--success);
+      }
+
+      .badge.warn {
+        background: var(--warn-soft);
+        color: var(--warn);
+      }
+
+      .badge.danger {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .tabs {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      button {
+        border: none;
+        border-radius: 14px;
+        padding: 11px 16px;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      .tab-btn {
+        background: #f2f7fc;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .tab-btn.active {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(35, 105, 233, 0.26);
+      }
+
+      .primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .secondary {
+        background: #edf4fb;
+        color: var(--text);
+      }
+
+      .warn-btn {
+        background: #fff4e4;
+        color: var(--warn);
+      }
+
+      .danger-btn {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .workspace {
+        display: grid;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .workspace > * {
+        min-width: 0;
+      }
+
+      .panel {
+        display: none;
+        padding: 22px;
+        min-width: 0;
+      }
+
+      .panel.active {
+        display: block;
+      }
+
+      .grid-two {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 18px;
+      }
+
+      .grid-two > * {
+        min-width: 0;
+      }
+
+      .skill-layout {
+        align-items: start;
+      }
+
+      .card {
+        padding: 20px;
+        min-width: 0;
+      }
+
+      .library-card {
+        margin-top: 18px;
+      }
+
+      .library-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+      }
+
+      .library-tools {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+
+      .skill-board {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+        max-height: 460px;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .skill-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background:
+          linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(244, 249, 255, 0.92)),
+          #fff;
+        padding: 15px;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        box-shadow: 0 12px 28px rgba(25, 68, 121, 0.08);
+      }
+
+      .skill-card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+      }
+
+      .skill-card-title {
+        margin: 0;
+        font-size: 15px;
+      }
+
+      .skill-card-summary {
+        min-height: 42px;
+      }
+
+      .skill-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .tiny-btn {
+        border-radius: 999px;
+        padding: 8px 11px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .row.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px 13px;
+        color: var(--text);
+        background: #fbfdff;
+      }
+
+      textarea {
+        min-height: 108px;
+        resize: vertical;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .meta,
+      .hint {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.65;
+      }
+
+      .hint.warn {
+        color: var(--warn);
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .status-item,
+      .step-item,
+      .task-item,
+      .skill-option,
+      .result-item {
+        border: 1px solid var(--line);
+        background: #fcfdff;
+        border-radius: 16px;
+        padding: 14px;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .result-item.success {
+        border-color: #cbe8d8;
+        background: #f3fbf6;
+      }
+
+      .result-item.warn {
+        border-color: #f1d7a6;
+        background: #fff9ef;
+      }
+
+      .result-item.error {
+        border-color: #efc2c2;
+        background: #fff4f4;
+      }
+
+      .empty {
+        border: 1px dashed var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .step-title,
+      .task-title,
+      .result-title,
+      .status-title {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 700;
+      }
+
+      .progress {
+        overflow: hidden;
+        height: 10px;
+        border-radius: 999px;
+        background: #e6eef8;
+      }
+
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #2b78f2 0%, #66a1ff 100%);
+        transition: width 280ms linear;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .progress-bar.estimated::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          100deg,
+          rgba(255, 255, 255, 0.12) 0%,
+          rgba(255, 255, 255, 0.38) 45%,
+          rgba(255, 255, 255, 0.12) 100%
+        );
+        animation: progress-shimmer 1.4s linear infinite;
+      }
+
+      @keyframes progress-shimmer {
+        from {
+          transform: translateX(-60%);
+        }
+        to {
+          transform: translateX(60%);
+        }
+      }
+
+      .progress-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .skill-option {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .skill-option input[type="checkbox"] {
+        width: auto;
+        margin-top: 4px;
+      }
+
+      .task-skill-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 12px;
+        max-height: 520px;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .task-skill-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+
+      .task-skill-card {
+        cursor: pointer;
+        background:
+          linear-gradient(135deg, #ffffff 0%, #f5f9ff 100%);
+        border-color: #dbe8f6;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 12px;
+        min-height: 138px;
+        transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+      }
+
+      .task-skill-card:hover {
+        border-color: rgba(35, 105, 233, 0.42);
+        box-shadow: 0 12px 24px rgba(25, 68, 121, 0.1);
+      }
+
+      .task-skill-card.selected {
+        border-color: var(--accent);
+        box-shadow: 0 16px 30px rgba(35, 105, 233, 0.16);
+        background:
+          linear-gradient(135deg, #ffffff 0%, #eef5ff 100%);
+      }
+
+      .task-skill-card input[type="checkbox"] {
+        accent-color: var(--accent);
+        margin-top: 2px;
+      }
+
+      .task-skill-title {
+        display: block;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+
+      .task-skill-summary {
+        display: -webkit-box;
+        min-height: 42px;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+
+      .log-box {
+        margin: 0;
+        padding: 14px;
+        border-radius: 16px;
+        background: #0f1724;
+        color: #edf2fb;
+        font-size: 12px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        word-break: break-word;
+        min-height: 120px;
+        overflow-wrap: anywhere;
+      }
+
+      .recording-card video {
+        display: block;
+        width: 100%;
+        max-height: 220px;
+        margin-top: 10px;
+        border-radius: 14px;
+        background: #0f1724;
+      }
+
+      .recording-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      .recording-actions button {
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+
+      .pill-line {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+
+      .mini-pill {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #eef4fb;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      @media (max-width: 980px) {
+        .hero-top,
+        .grid-two,
+        .library-tools,
+        .row,
+        .row.three {
+          grid-template-columns: 1fr;
+          flex-direction: column;
+        }
+
+        .badge-row {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div class="hero-top">
+          <div>
+            <h1>通过浏览器演示快速创建智能体技能</h1>
+            <p>
+              你只需要先演示一次真实操作，系统就会帮你整理步骤、保存成技能，之后再让技能自动执行。
+            </p>
+          </div>
+          <div class="badge-row">
+            <div class="badge info" id="configBadge">正在检查配置</div>
+            <div class="badge warn" id="extensionBadge">正在检测扩展</div>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" data-panel="skillsPanel">第一步：录一次流程</button>
+          <button class="tab-btn" data-panel="tasksPanel">第二步：让技能自动执行</button>
+        </div>
+      </section>
+
+      <section class="card" style="margin-bottom: 18px">
+        <div class="task-skill-header" style="margin-bottom: 12px">
+          <h2 style="margin: 0">新手建议流程</h2>
+          <span class="mini-pill">照着做就行</span>
+        </div>
+        <div class="task-skill-grid" style="max-height: none">
+          <div class="task-item">
+            <strong class="task-title">1. 安装扩展并打开目标网站</strong>
+            <div class="meta">先确认右上角显示“已连接扩展”，再去目标网页准备操作。</div>
+          </div>
+          <div class="task-item">
+            <strong class="task-title">2. 点击“开始演示”</strong>
+            <div class="meta">系统会同步开始监听和录屏。接下来按你平时的真实操作走一遍。</div>
+          </div>
+          <div class="task-item">
+            <strong class="task-title">3. 停止后分析并保存技能</strong>
+            <div class="meta">系统会结合监听时间轴和截图生成步骤，确认后保存成技能。</div>
+          </div>
+          <div class="task-item">
+            <strong class="task-title">4. 选择技能并自动执行</strong>
+            <div class="meta">去第二步页面，勾选技能，点击“立刻执行”，看进度条和日志即可。</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="workspace">
+        <section class="panel active" id="skillsPanel">
+          <div class="grid-two skill-layout">
+            <div class="card">
+              <h2>先把流程录下来</h2>
+              <p>推荐你直接点击“开始演示”，去目标网站实际操作一遍。不会写流程图也没关系，系统会根据你的演示自动整理步骤。</p>
+
+              <div class="form-grid">
+                <div class="row">
+                  <div>
+                    <label for="skillName">给这个技能起个名字</label>
+                    <input id="skillName" type="text" placeholder="例如：下载土地公告 PDF" />
+                  </div>
+                  <div>
+                    <label for="skillDescription">一句话说明它能做什么</label>
+                    <input id="skillDescription" type="text" placeholder="例如：按地区筛选公告并打开详情页" />
+                  </div>
+                </div>
+
+                <div>
+                  <label for="skillRequest">你想让系统学会什么</label>
+                  <textarea
+                    id="skillRequest"
+                    placeholder="例如：打开中国土地市场网，进入出让公告，筛选浙江省杭州市，打开详情页并保存结果。"
+                  ></textarea>
+                </div>
+
+                <div class="row">
+                  <div>
+                    <label for="videoInput">如果你已经录好了视频，也可以直接上传</label>
+                    <input id="videoInput" type="file" accept="video/mp4,video/webm" />
+                  </div>
+                  <div>
+                    <label for="videoPath">当前选中的视频路径</label>
+                    <input id="videoPath" type="text" placeholder="上传后会自动填写，也可以手动粘贴已有视频路径" />
+                  </div>
+                </div>
+
+                <div class="actions">
+                  <button class="secondary" id="uploadBtn">上传视频</button>
+                  <button class="primary" id="analyzeVideoBtn">分析视频</button>
+                  <button class="secondary" id="startDemoBtn">开始演示</button>
+                  <button class="warn-btn" id="stopDemoBtn">停止演示</button>
+                  <button class="primary" id="analyzeDemoBtn">分析演示过程</button>
+                  <button class="primary" id="saveSkillBtn">保存技能</button>
+                </div>
+
+                <div class="hint warn" id="demoHint">
+                  小白建议：优先使用“开始演示”。点击后切到目标网页正常操作，做完再回来点“停止演示”和“分析演示过程”。
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2>我现在进行到哪一步了？</h2>
+              <div class="stack" id="listenerStatusBox"></div>
+
+              <div style="margin-top: 18px">
+                <h3>步骤整理进度</h3>
+                <div class="status-item">
+                  <div class="progress">
+                    <div class="progress-bar" id="analysisProgressBar"></div>
+                  </div>
+                  <div class="progress-meta">
+                    <span id="analysisStage">等待开始</span>
+                    <span id="analysisPercent">0%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top: 18px">
+                <h3>系统整理出的步骤</h3>
+                <div class="stack" id="stepList"></div>
+              </div>
+
+              <div style="margin-top: 18px">
+                <h3>可继续分析的录制视频</h3>
+                <div class="stack" id="recordingList"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card library-card">
+            <div class="library-header">
+              <div>
+                <h2>已经学会的技能</h2>
+                <p>这里保存的是你已经确认过的流程。后面可以直接复用，也可以重命名、改说明、删除。</p>
+              </div>
+              <div class="badge info" id="skillCountBadge">0 个技能</div>
+            </div>
+            <div class="library-tools">
+              <input id="skillSearch" type="search" placeholder="搜索技能名称、说明、来源或站点" />
+              <button class="secondary" id="refreshSkillsBtn">刷新技能</button>
+            </div>
+            <div class="skill-board" id="savedSkillList"></div>
+          </div>
+        </section>
+
+        <section class="panel" id="tasksPanel">
+          <div class="grid-two">
+            <div class="card">
+              <h2>让技能帮你自动操作</h2>
+              <p>先检查下面 3 项：浏览器调试地址是否可用、执行模式是否正确、需要的技能是否已勾选。准备好后再点击“立刻执行”。</p>
+
+              <div class="form-grid">
+                <div>
+                    <label for="taskName">这次任务叫什么</label>
+                    <input id="taskName" type="text" placeholder="例如：今天再执行一次土地公告筛选" />
+                </div>
+
+                <div>
+                    <label for="taskObjective">这次你想让它完成什么</label>
+                    <textarea
+                      id="taskObjective"
+                      placeholder="例如：使用已保存的技能，再执行一次相同流程，并把结果页面打开。"
+                    ></textarea>
+                </div>
+
+                <div class="row three">
+                  <div>
+                    <label for="taskCdpUrl">浏览器调试地址</label>
+                    <input id="taskCdpUrl" type="text" value="http://127.0.0.1:9222" />
+                  </div>
+                  <div>
+                    <label for="taskExecutionMode">执行方式</label>
+                    <select id="taskExecutionMode">
+                      <option value="browser_use_live_workflow" selected>Browser Use 智能执行（推荐）</option>
+                      <option value="generic_live_workflow">传统 CDP 回放（备用）</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="taskFrequency">什么时候执行</label>
+                    <select id="taskFrequency">
+                      <option value="immediate">立刻执行</option>
+                      <option value="once">执行一次</option>
+                      <option value="daily">每天执行</option>
+                      <option value="weekly">每周执行</option>
+                      <option value="manual">仅保存，手动执行</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div id="taskRunAtWrap">
+                  <label for="taskRunAt">计划执行时间</label>
+                  <input id="taskRunAt" type="datetime-local" />
+                </div>
+
+                <div>
+                  <div class="task-skill-header">
+                    <label>勾选这次要用的技能</label>
+                    <span class="mini-pill" id="taskSkillCount">已选 0 个</span>
+                  </div>
+                  <input id="taskSkillSearch" type="search" placeholder="搜索后再勾选技能" style="margin-bottom: 10px" />
+                  <div class="task-skill-grid" id="skillOptions"></div>
+                </div>
+
+                <div class="actions">
+                  <button class="primary" id="runNowBtn">立刻执行</button>
+                  <button class="secondary" id="saveTaskBtn">保存任务</button>
+                  <button class="secondary" id="refreshTasksBtn">刷新任务列表</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2>执行进度与结果</h2>
+              <div class="status-item" style="margin-bottom: 14px">
+                <div class="progress">
+                  <div class="progress-bar" id="taskProgressBar"></div>
+                </div>
+                <div class="progress-meta">
+                  <span id="taskStage">等待执行</span>
+                  <span id="taskPercent">0%</span>
+                </div>
+              </div>
+              <div class="stack" id="resultList"></div>
+
+              <div style="margin-top: 18px">
+                <h3>系统正在做什么</h3>
+                <pre class="log-box" id="runLogs">任务开始后，这里会持续显示系统正在做什么。</pre>
+              </div>
+
+              <div style="margin-top: 18px">
+                <h3>任务记录</h3>
+                <div class="stack" id="taskList"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const state = {
+        uploadedVideoPath: "",
+        latestListenerSessionId: "",
+        selectedRecordingSessionId: "",
+        analyzedSteps: [],
+        analyzedSourceType: "",
+        analyzedRequest: "",
+        analyzedSiteUrl: "",
+        skills: [],
+        selectedSkillIds: new Set(),
+        recordings: [],
+        extensionAvailable: false,
+        extensionSettings: null,
+        localRecording: null,
+        runningTaskId: "",
+        refreshTimer: null,
+      };
+
+      const els = {
+        configBadge: document.getElementById("configBadge"),
+        extensionBadge: document.getElementById("extensionBadge"),
+        tabs: document.querySelectorAll("[data-panel]"),
+        panels: document.querySelectorAll(".panel"),
+        skillName: document.getElementById("skillName"),
+        skillDescription: document.getElementById("skillDescription"),
+        skillRequest: document.getElementById("skillRequest"),
+        videoInput: document.getElementById("videoInput"),
+        videoPath: document.getElementById("videoPath"),
+        uploadBtn: document.getElementById("uploadBtn"),
+        analyzeVideoBtn: document.getElementById("analyzeVideoBtn"),
+        startDemoBtn: document.getElementById("startDemoBtn"),
+        stopDemoBtn: document.getElementById("stopDemoBtn"),
+        analyzeDemoBtn: document.getElementById("analyzeDemoBtn"),
+        saveSkillBtn: document.getElementById("saveSkillBtn"),
+        demoHint: document.getElementById("demoHint"),
+        listenerStatusBox: document.getElementById("listenerStatusBox"),
+        recordingList: document.getElementById("recordingList"),
+        savedSkillList: document.getElementById("savedSkillList"),
+        skillSearch: document.getElementById("skillSearch"),
+        skillCountBadge: document.getElementById("skillCountBadge"),
+        refreshSkillsBtn: document.getElementById("refreshSkillsBtn"),
+        analysisProgressBar: document.getElementById("analysisProgressBar"),
+        analysisStage: document.getElementById("analysisStage"),
+        analysisPercent: document.getElementById("analysisPercent"),
+        stepList: document.getElementById("stepList"),
+        taskProgressBar: document.getElementById("taskProgressBar"),
+        taskStage: document.getElementById("taskStage"),
+        taskPercent: document.getElementById("taskPercent"),
+        taskName: document.getElementById("taskName"),
+        taskObjective: document.getElementById("taskObjective"),
+        taskCdpUrl: document.getElementById("taskCdpUrl"),
+        taskExecutionMode: document.getElementById("taskExecutionMode"),
+        taskFrequency: document.getElementById("taskFrequency"),
+        taskRunAt: document.getElementById("taskRunAt"),
+        taskRunAtWrap: document.getElementById("taskRunAtWrap"),
+        taskSkillSearch: document.getElementById("taskSkillSearch"),
+        taskSkillCount: document.getElementById("taskSkillCount"),
+        skillOptions: document.getElementById("skillOptions"),
+        runNowBtn: document.getElementById("runNowBtn"),
+        saveTaskBtn: document.getElementById("saveTaskBtn"),
+        refreshTasksBtn: document.getElementById("refreshTasksBtn"),
+        resultList: document.getElementById("resultList"),
+        runLogs: document.getElementById("runLogs"),
+        taskList: document.getElementById("taskList"),
+      };
+
+      function setBadge(el, text, tone) {
+        el.textContent = text;
+        el.className = `badge ${tone}`;
+      }
+
+      function setAnalysisProgress(percent, stage, options = {}) {
+        const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+        els.analysisProgressBar.style.width = `${safePercent}%`;
+        els.analysisProgressBar.classList.toggle("estimated", Boolean(options.estimated));
+        els.analysisPercent.textContent = `${safePercent}%`;
+        els.analysisStage.textContent = options.estimated ? `${stage || "处理中"}（估算）` : stage || "处理中";
+      }
+
+      function setTaskProgress(percent, stage, options = {}) {
+        const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+        els.taskProgressBar.style.width = `${safePercent}%`;
+        els.taskProgressBar.classList.toggle("estimated", Boolean(options.estimated));
+        els.taskPercent.textContent = `${safePercent}%`;
+        els.taskStage.textContent = options.estimated ? `${stage || "处理中"}（估算）` : stage || "处理中";
+      }
+
+      function setResult(items) {
+        els.resultList.innerHTML = "";
+        if (!items || !items.length) {
+          els.resultList.innerHTML = '<div class="empty">这里会显示系统给你的结果提醒，比如上传成功、分析完成、执行失败原因等。</div>';
+          return;
+        }
+        items.forEach((item) => {
+          const node = document.createElement("div");
+          node.className = `result-item ${item.tone || ""}`.trim();
+          const details = (item.lines || [])
+            .map((line) => `<div class="meta">${escapeHtml(line)}</div>`)
+            .join("");
+          node.innerHTML = `<strong class="result-title">${escapeHtml(item.title)}</strong>${details}`;
+          els.resultList.appendChild(node);
+        });
+      }
+
+      function appendResult(item) {
+        const existing = Array.from(els.resultList.children).filter((node) => !node.classList.contains("empty"));
+        const next = [item];
+        existing.slice(0, 2).forEach((node) => {
+          next.push({
+            title: node.querySelector(".result-title")?.textContent || "最近结果",
+            tone: node.className.includes("error")
+              ? "error"
+              : node.className.includes("warn")
+                ? "warn"
+                : node.className.includes("success")
+                  ? "success"
+                  : "",
+            lines: Array.from(node.querySelectorAll(".meta")).map((line) => line.textContent || ""),
+          });
+        });
+        setResult(next);
+      }
+
+      function setLogs(lines) {
+        if (!lines || !lines.length) {
+          els.runLogs.textContent = "任务开始后，这里会持续刷新执行日志。";
+          return;
+        }
+        els.runLogs.textContent = lines.join("\n");
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function isPlaceholderSkillName(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        return ["", "未命名技能", "untitled skill", "new skill"].includes(normalized);
+      }
+
+      function sourceTypeLabel(sourceType) {
+        const normalized = String(sourceType || "").trim();
+        if (normalized === "video_analysis") {
+          return "视频分析";
+        }
+        if (normalized === "listener_analysis") {
+          return "监听分析";
+        }
+        return normalized || "分析";
+      }
+
+      function executionModeLabel(taskType) {
+        const normalized = String(taskType || "").trim();
+        if (normalized === "browser_use_live_workflow") {
+          return "Browser Use 智能执行";
+        }
+        if (normalized === "generic_live_workflow") {
+          return "传统 CDP 回放";
+        }
+        if (normalized === "autoglm_live_workflow") {
+          return "AutoGLM 执行";
+        }
+        if (normalized === "eia_live_workflow") {
+          return "环评专用流程";
+        }
+        return normalized || "Browser Use 智能执行";
+      }
+
+      function compactSiteLabel(siteUrl) {
+        if (!siteUrl) {
+          return "未绑定站点";
+        }
+        try {
+          return new URL(siteUrl).host || siteUrl;
+        } catch {
+          return siteUrl;
+        }
+      }
+
+      function updateSelectedSkillCount() {
+        if (!els.taskSkillCount) {
+          return;
+        }
+        els.taskSkillCount.textContent = `已选 ${state.selectedSkillIds.size} 个`;
+      }
+
+      async function api(path, options = {}) {
+        const response = await fetch(path, options);
+        const rawText = await response.text();
+        let data = {};
+        try {
+          data = rawText ? JSON.parse(rawText) : {};
+        } catch {
+          data = { error: rawText || `${path} 返回了无法解析的内容` };
+        }
+        if (!response.ok) {
+          const error = new Error(data.error || data.message || JSON.stringify(data));
+          error.status = response.status;
+          error.payload = data;
+          throw error;
+        }
+        return data;
+      }
+
+      function setActivePanel(panelId) {
+        els.tabs.forEach((button) => {
+          button.classList.toggle("active", button.dataset.panel === panelId);
+        });
+        els.panels.forEach((panel) => {
+          panel.classList.toggle("active", panel.id === panelId);
+        });
+      }
+
+      function renderSteps(steps) {
+        els.stepList.innerHTML = "";
+        if (!steps || !steps.length) {
+          els.stepList.innerHTML = '<div class="empty">完成分析后，这里会按顺序列出系统理解到的每一步。</div>';
+          return;
+        }
+
+        steps.forEach((step) => {
+          const node = document.createElement("div");
+          node.className = "step-item";
+          const detail = [step.target, step.value, step.notes].filter(Boolean).join(" | ");
+          node.innerHTML = `
+            <strong class="step-title">步骤 ${step.step_number || "?"} · ${escapeHtml(step.action || "未命名动作")}</strong>
+            <div class="meta">${escapeHtml(detail || "暂无补充信息")}</div>
+          `;
+          els.stepList.appendChild(node);
+        });
+      }
+
+      function skillMatchesQuery(skill, query) {
+        if (!query) {
+          return true;
+        }
+        const haystack = [
+          skill.name,
+          skill.description,
+          skill.source_type,
+          skill.site_url,
+          skill.user_request,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(query.toLowerCase());
+      }
+
+      function filteredSkills(query) {
+        return state.skills.filter((skill) => skillMatchesQuery(skill, query.trim()));
+      }
+
+      function formatDateTime(value) {
+        if (!value) {
+          return "未知时间";
+        }
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+          return "未知时间";
+        }
+        return date.toLocaleString();
+      }
+
+      function renderSkillOptions(skills) {
+        els.skillOptions.innerHTML = "";
+        const query = els.taskSkillSearch.value || "";
+        const visibleSkills = skills.filter((skill) => skillMatchesQuery(skill, query.trim()));
+        if (!visibleSkills.length) {
+          els.skillOptions.innerHTML = skills.length
+            ? '<div class="empty">没有匹配的技能，换个关键词试试。</div>'
+            : '<div class="empty">你还没有可用技能。先回到第一步，录一次流程并保存成技能。</div>';
+          updateSelectedSkillCount();
+          return;
+        }
+
+        visibleSkills.forEach((skill) => {
+          const node = document.createElement("label");
+          const selected = state.selectedSkillIds.has(skill.id);
+          const stepCount = Array.isArray(skill.steps) ? skill.steps.length : 0;
+          node.className = `skill-option task-skill-card ${selected ? "selected" : ""}`;
+          node.innerHTML = `
+            <input type="checkbox" value="${escapeHtml(skill.id)}" ${selected ? "checked" : ""} />
+            <div class="task-skill-copy">
+              <strong class="task-skill-title">${escapeHtml(skill.name || "未命名技能")}</strong>
+              <div class="meta task-skill-summary">${escapeHtml(skill.description || "未填写说明")}</div>
+              <div class="pill-line">
+                <span class="mini-pill">${escapeHtml(sourceTypeLabel(skill.source_type))}</span>
+                <span class="mini-pill">${stepCount} 步</span>
+                <span class="mini-pill">${escapeHtml(compactSiteLabel(skill.site_url))}</span>
+              </div>
+            </div>
+          `;
+          els.skillOptions.appendChild(node);
+        });
+
+        els.skillOptions.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+          input.addEventListener("change", () => {
+            if (input.checked) {
+              state.selectedSkillIds.add(input.value);
+            } else {
+              state.selectedSkillIds.delete(input.value);
+            }
+            input.closest(".task-skill-card")?.classList.toggle("selected", input.checked);
+            updateSelectedSkillCount();
+          });
+        });
+        updateSelectedSkillCount();
+      }
+
+      function renderSavedSkills(skills) {
+        els.savedSkillList.innerHTML = "";
+        const query = els.skillSearch.value || "";
+        const visibleSkills = skills.filter((skill) => skillMatchesQuery(skill, query.trim()));
+        els.skillCountBadge.textContent = `${skills.length} 个技能`;
+        if (!visibleSkills.length) {
+          els.savedSkillList.innerHTML = skills.length
+            ? '<div class="empty">没有匹配的技能，换个关键词试试。</div>'
+            : '<div class="empty">你保存过的技能会出现在这里，也会自动同步到“第二步：让技能自动执行”里。</div>';
+          return;
+        }
+
+        visibleSkills.forEach((skill) => {
+          const node = document.createElement("div");
+          node.className = "skill-card";
+          const createdAt = formatDateTime(skill.created_at_iso);
+          const siteUrl = skill.site_url || "未绑定站点";
+          node.innerHTML = `
+            <div class="skill-card-head">
+              <div>
+                <h3 class="skill-card-title">${escapeHtml(skill.name || "未命名技能")}</h3>
+                <div class="meta skill-card-summary">${escapeHtml(skill.description || "未填写说明")}</div>
+              </div>
+              <span class="mini-pill">${Array.isArray(skill.steps) ? skill.steps.length : 0} 步</span>
+            </div>
+            <div class="pill-line">
+              <span class="mini-pill">${escapeHtml(skill.source_type || "analysis")}</span>
+              <span class="mini-pill">${escapeHtml(createdAt)}</span>
+            </div>
+            <div class="meta">${escapeHtml(siteUrl)}</div>
+            <div class="skill-actions">
+              <button class="secondary tiny-btn rename-skill-btn" data-skill-id="${escapeHtml(skill.id)}">重命名</button>
+              <button class="secondary tiny-btn edit-skill-btn" data-skill-id="${escapeHtml(skill.id)}">编辑说明</button>
+              <button class="danger-btn tiny-btn delete-skill-btn" data-skill-id="${escapeHtml(skill.id)}">删除</button>
+            </div>
+          `;
+          els.savedSkillList.appendChild(node);
+        });
+
+        els.savedSkillList.querySelectorAll(".rename-skill-btn").forEach((button) => {
+          button.addEventListener("click", () => renameSkill(button.dataset.skillId || "").catch((error) => handleError("重命名技能", error)));
+        });
+        els.savedSkillList.querySelectorAll(".edit-skill-btn").forEach((button) => {
+          button.addEventListener("click", () => editSkill(button.dataset.skillId || "").catch((error) => handleError("编辑技能", error)));
+        });
+        els.savedSkillList.querySelectorAll(".delete-skill-btn").forEach((button) => {
+          button.addEventListener("click", () => deleteSkill(button.dataset.skillId || "").catch((error) => handleError("删除技能", error)));
+        });
+      }
+
+      function renderTasks(tasks) {
+        els.taskList.innerHTML = "";
+        if (!tasks.length) {
+          els.taskList.innerHTML = '<div class="empty">你还没有保存过任务。需要定时自动跑时，再把任务保存下来即可。</div>';
+          return;
+        }
+
+        tasks.forEach((task) => {
+          const skillNames = Array.isArray(task.payload?.skill_names) && task.payload.skill_names.length
+            ? task.payload.skill_names.join("、")
+            : "未绑定技能";
+          const lines = [
+            `状态：${task.status}`,
+            `执行模式：${executionModeLabel(task.task_type || task.payload?.task_type)}`,
+            task.current_step && task.total_steps ? `进度：第 ${task.current_step}/${task.total_steps} 步` : "",
+            task.progress_stage ? `阶段：${task.progress_stage}` : "",
+            `频次：${task.frequency}`,
+            `时间：${task.run_at_iso || "未设置"}`,
+            `技能：${skillNames}`,
+            `目标：${task.payload?.objective || task.payload?.user_request || "未填写"}`,
+            `执行次数：${task.run_count || 0}${task.last_run_at_iso ? ` · 最近一次：${task.last_run_at_iso}` : ""}`,
+          ].filter(Boolean);
+          if (task.last_error) {
+            lines.push(`最近错误：${task.last_error}`);
+          }
+          const node = document.createElement("div");
+          node.className = "task-item";
+          node.innerHTML = `
+            <strong class="task-title">${escapeHtml(task.name)}</strong>
+            ${lines.map((line) => `<div class="meta">${escapeHtml(line)}</div>`).join("")}
+          `;
+          els.taskList.appendChild(node);
+        });
+      }
+
+      function recordingStateText(settings) {
+        if (state.localRecording) {
+          return "屏幕录屏中";
+        }
+        if (!settings?.enabled) {
+          return "未录屏";
+        }
+        if (settings.recordingState === "recording") {
+          return "录屏中";
+        }
+        if (settings.recordingState === "pending") {
+          return "等待目标页";
+        }
+        return "未录屏";
+      }
+
+      function localRecordingStatusText() {
+        if (!state.localRecording) {
+          return "未启动";
+        }
+        return "录制中，停止演示后上传";
+      }
+
+      function renderListenerStatus(summary = null) {
+        const settings = state.extensionSettings;
+        const sessionId = settings?.sessionId || state.selectedRecordingSessionId || state.latestListenerSessionId || "";
+        const enabledText = settings?.enabled ? "监听中" : "未监听";
+        const recordingText = recordingStateText(settings);
+        const extensionState = state.extensionAvailable ? "已连接扩展" : "未检测到扩展";
+        const items = [
+          {
+            title: "扩展连接",
+            lines: [
+              `状态：${extensionState}`,
+              `监听：${enabledText}`,
+              `录屏：${recordingText}`,
+              `本地录屏：${localRecordingStatusText()}`,
+              `会话 ID：${sessionId || "暂无"}`,
+            ],
+          },
+        ];
+
+        if (summary) {
+          items.push({
+            title: "当前会话概览",
+            lines: [
+              `事件数：${summary.event_count}`,
+              `关键事件：${summary.key_event_count}`,
+              `截图数：${summary.screenshot_count}`,
+              `可分析截图：${summary.listener_analysis_ready ? "是" : "否"}`,
+              `录屏文件：${
+                summary.session_recording_ready
+                  ? "已存在"
+                  : state.localRecording
+                    ? "正在录制，停止演示后上传"
+                    : "暂无"
+              }`,
+            ],
+          });
+        } else {
+          items.push({
+            title: "当前会话概览",
+            lines: ["当前会话还没有产生可展示的数据。"],
+          });
+        }
+
+        els.listenerStatusBox.innerHTML = items
+          .map(
+            (item) => `
+              <div class="status-item">
+                <strong class="status-title">${escapeHtml(item.title)}</strong>
+                ${item.lines.map((line) => `<div class="meta">${escapeHtml(line)}</div>`).join("")}
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function formatFileSize(bytes) {
+        const size = Number(bytes) || 0;
+        if (size >= 1024 * 1024) {
+          return `${(size / 1024 / 1024).toFixed(1)} MB`;
+        }
+        if (size >= 1024) {
+          return `${Math.round(size / 1024)} KB`;
+        }
+        return `${size} B`;
+      }
+
+      function formatDurationMs(ms) {
+        const totalSeconds = Math.max(0, Math.round((Number(ms) || 0) / 1000));
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+        const seconds = String(totalSeconds % 60).padStart(2, "0");
+        return `${minutes}:${seconds}`;
+      }
+
+      function recordingHasTimeline(recording) {
+        return Number(recording?.event_count || 0) > 0;
+      }
+
+      function renderRecordings(recordings) {
+        els.recordingList.innerHTML = "";
+        if (!recordings || !recordings.length) {
+          els.recordingList.innerHTML = '<div class="empty">这里会显示你刚录好的演示视频。先点击“开始演示”，做完后再点“停止演示”。</div>';
+          return;
+        }
+
+        recordings.forEach((recording) => {
+          const node = document.createElement("div");
+          node.className = "status-item recording-card";
+          const videoUrl = `${recording.video_url}&t=${encodeURIComponent(recording.saved_at_iso || Date.now())}`;
+          const hasTimeline = recordingHasTimeline(recording);
+          node.innerHTML = `
+            <strong class="status-title">${escapeHtml(recording.title || "未命名录屏")}</strong>
+            <div class="meta">${
+              hasTimeline
+                ? "AI 智能命名：根据监听事件、页面标题和关键操作生成"
+                : "这个录屏只有视频文件，没有可恢复的监听时间轴；通常是旧录屏或会话记录已被清空。"
+            }</div>
+            <div class="pill-line">
+              <span class="mini-pill">${escapeHtml(formatDurationMs(recording.duration_ms))}</span>
+              <span class="mini-pill">${escapeHtml(formatFileSize(recording.file_size_bytes))}</span>
+              <span class="mini-pill">${Number(recording.event_count || 0)} 事件</span>
+              <span class="mini-pill">${Number(recording.key_event_count || 0)} 关键事件</span>
+              <span class="mini-pill">${Number(recording.screenshot_count || 0)} 截图</span>
+            </div>
+            <video controls preload="metadata" src="${escapeHtml(videoUrl)}"></video>
+            <div class="recording-actions">
+              <button class="secondary use-recording-btn" data-session-id="${escapeHtml(recording.session_id)}" data-path="${escapeHtml(recording.recording_path || "")}" ${hasTimeline ? "" : "disabled"}>
+                ${hasTimeline ? "用这个视频分析" : "缺少监听时间轴"}
+              </button>
+              <button class="warn-btn delete-recording-btn" data-session-id="${escapeHtml(recording.session_id)}">
+                删除视频
+              </button>
+            </div>
+          `;
+          els.recordingList.appendChild(node);
+        });
+
+        els.recordingList.querySelectorAll(".use-recording-btn").forEach((button) => {
+          button.addEventListener("click", async () => {
+            button.disabled = true;
+            state.selectedRecordingSessionId = button.dataset.sessionId || state.selectedRecordingSessionId;
+            state.latestListenerSessionId = state.selectedRecordingSessionId || state.latestListenerSessionId;
+            state.uploadedVideoPath = button.dataset.path || state.uploadedVideoPath;
+            els.videoPath.value = state.uploadedVideoPath;
+            appendResult({
+              title: "已选择录制视频",
+              tone: "success",
+              lines: [`会话 ID：${state.selectedRecordingSessionId || state.latestListenerSessionId}`, `视频路径：${state.uploadedVideoPath}`],
+            });
+            try {
+              await analyzeVideo();
+            } catch (error) {
+              handleError("用录屏分析", error);
+            } finally {
+              button.disabled = false;
+            }
+          });
+        });
+
+        els.recordingList.querySelectorAll(".delete-recording-btn").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const sessionId = button.dataset.sessionId || "";
+            if (!sessionId) {
+              return;
+            }
+            if (!window.confirm("确定删除这个录制视频吗？监听事件和截图会保留。")) {
+              return;
+            }
+            await api(`/api/browser-listener/recording?session_id=${encodeURIComponent(sessionId)}`, {
+              method: "DELETE",
+            });
+            if (state.latestListenerSessionId === sessionId) {
+              state.uploadedVideoPath = "";
+              els.videoPath.value = "";
+            }
+            if (state.selectedRecordingSessionId === sessionId) {
+              state.selectedRecordingSessionId = "";
+            }
+            appendResult({
+              title: "录制视频已删除",
+              tone: "success",
+              lines: [`会话 ID：${sessionId}`, "监听事件和截图已保留。"],
+            });
+            await refreshSessionSummary();
+            await refreshRecordings({ force: true });
+          });
+        });
+      }
+
+      function isRecordingPlaybackActive() {
+        return Array.from(els.recordingList.querySelectorAll("video")).some((video) => {
+          return !video.paused && !video.ended && video.readyState > 0;
+        });
+      }
+
+      async function refreshRecordings(options = {}) {
+        if (!options.force && isRecordingPlaybackActive()) {
+          return;
+        }
+        const data = await api("/api/browser-listener/recordings?limit=8");
+        state.recordings = data.recordings || [];
+        renderRecordings(state.recordings);
+      }
+
+      function selectedSkillIds() {
+        return Array.from(state.selectedSkillIds);
+      }
+
+      function setDefaultRunAt() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 10);
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        els.taskRunAt.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
+
+      function syncFrequencyVisibility() {
+        els.taskRunAtWrap.style.display = ["once", "daily", "weekly"].includes(els.taskFrequency.value) ? "block" : "none";
+      }
+
+      async function loadStatus() {
+        const data = await api("/api/status");
+        setBadge(
+          els.configBadge,
+          data.config_ready ? "配置已就绪" : "配置未完成",
+          data.config_ready ? "success" : "warn"
+        );
+      }
+
+      async function refreshSessionSummary() {
+        let summary = null;
+        const sessionId = state.extensionSettings?.sessionId || state.selectedRecordingSessionId || state.latestListenerSessionId;
+
+        try {
+          if (sessionId) {
+            summary = await api(`/api/browser-listener/session?session_id=${encodeURIComponent(sessionId)}`);
+          } else {
+            summary = await api("/api/browser-listener/session-latest");
+          }
+          state.latestListenerSessionId = summary.session_id || state.latestListenerSessionId;
+        } catch (error) {
+          if (error.status !== 404 && error.status !== 400) {
+            appendResult({
+              title: "监听状态刷新失败",
+              tone: "error",
+              lines: [error.message],
+            });
+          }
+        }
+
+        renderListenerStatus(summary);
+      }
+
+      function updateExtensionUi() {
+        if (state.extensionAvailable) {
+          const recordingText = recordingStateText(state.extensionSettings);
+          const text = state.extensionSettings?.enabled
+            ? `扩展已连接 · 正在监听 · ${recordingText}`
+            : "扩展已连接 · 未监听";
+          setBadge(els.extensionBadge, text, state.extensionSettings?.enabled ? "success" : "info");
+          els.demoHint.textContent =
+            "扩展已连接。点击“开始演示”后请选择要录制的 Edge 窗口或屏幕；完成操作后回到这里停止并分析。";
+        } else {
+          setBadge(els.extensionBadge, "未检测到扩展", "danger");
+          els.demoHint.textContent =
+            "当前页面没有收到扩展响应。请在这个 Edge 会话中确认 Eyeclaw Listener 扩展已安装并启用，然后刷新页面重试。";
+        }
+      }
+
+      function extensionBridge(type, payload = {}) {
+        return new Promise((resolve, reject) => {
+          const requestId = `eyeclaw-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+          const timeout = window.setTimeout(() => {
+            window.removeEventListener("message", handleResponse);
+            reject(new Error("扩展没有响应，请确认当前 Edge 已加载 Eyeclaw Listener 扩展。"));
+          }, 8000);
+
+          function handleResponse(event) {
+            if (event.source !== window) {
+              return;
+            }
+            const data = event.data || {};
+            if (data.source !== "eyeclaw-listener-extension" || data.requestId !== requestId) {
+              return;
+            }
+            window.clearTimeout(timeout);
+            window.removeEventListener("message", handleResponse);
+            if (!data.ok) {
+              reject(new Error(data.error || "扩展返回失败"));
+              return;
+            }
+            resolve(data.response || {});
+          }
+
+          window.addEventListener("message", handleResponse);
+          window.postMessage(
+            {
+              source: "eyeclaw-user-app",
+              type,
+              payload,
+              requestId,
+            },
+            "*"
+          );
+        });
+      }
+
+      async function refreshExtensionState() {
+        try {
+          const response = await extensionBridge("eyeclaw-listener-get-settings");
+          state.extensionAvailable = true;
+          state.extensionSettings = response.settings || null;
+        } catch {
+          state.extensionAvailable = false;
+          state.extensionSettings = null;
+        }
+        updateExtensionUi();
+      }
+
+      async function uploadVideo() {
+        const file = els.videoInput.files[0];
+        if (!file) {
+          appendResult({
+            title: "上传失败",
+            tone: "warn",
+            lines: ["请先选择一个 MP4 或 WebM 视频文件。"],
+          });
+          return;
+        }
+        const form = new FormData();
+        form.append("video", file);
+        const data = await api("/api/upload", { method: "POST", body: form });
+        state.selectedRecordingSessionId = "";
+        state.uploadedVideoPath = data.video_path;
+        els.videoPath.value = data.video_path;
+        appendResult({
+          title: "视频上传成功",
+          tone: "success",
+          lines: [`路径：${data.video_path}`, `时长：${data.duration_seconds} 秒`],
+        });
+      }
+
+      function chooseRecordingMimeType() {
+        if (typeof MediaRecorder === "undefined") {
+          return "";
+        }
+        if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
+          return "video/webm;codecs=vp9";
+        }
+        if (MediaRecorder.isTypeSupported("video/webm")) {
+          return "video/webm";
+        }
+        return "";
+      }
+
+      async function startScreenRecording(sessionId) {
+        if (!navigator.mediaDevices?.getDisplayMedia || typeof MediaRecorder === "undefined") {
+          throw new Error("当前浏览器不支持屏幕录制，请使用新版 Edge/Chrome。");
+        }
+
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          audio: false,
+          video: {
+            frameRate: 12,
+          },
+        });
+        const chunks = [];
+        const mimeType = chooseRecordingMimeType();
+        const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+        recorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            chunks.push(event.data);
+          }
+        };
+        recorder.start(1000);
+        state.localRecording = {
+          sessionId,
+          stream,
+          recorder,
+          chunks,
+          mimeType: mimeType || "video/webm",
+          startedAtMs: Date.now(),
+        };
+        updateExtensionUi();
+        renderListenerStatus(null);
+      }
+
+      async function stopScreenRecording() {
+        const recording = state.localRecording;
+        if (!recording) {
+          return null;
+        }
+
+        state.localRecording = null;
+        const endedAtMs = Date.now();
+        if (recording.recorder.state !== "inactive") {
+          await new Promise((resolve) => {
+            recording.recorder.addEventListener("stop", resolve, { once: true });
+            recording.recorder.stop();
+          });
+        }
+        recording.stream.getTracks().forEach((track) => track.stop());
+
+        const blob = new Blob(recording.chunks, { type: recording.mimeType || "video/webm" });
+        if (!blob.size) {
+          throw new Error("录屏没有产生有效视频数据，请确认录制权限已授予。");
+        }
+
+        const form = new FormData();
+        form.append("session_id", recording.sessionId);
+        form.append("started_at_ms", String(recording.startedAtMs));
+        form.append("ended_at_ms", String(endedAtMs));
+        form.append("mime_type", blob.type || "video/webm");
+        form.append("video", blob, `session-${recording.sessionId}.webm`);
+        const result = await api("/api/browser-listener/session-recording", {
+          method: "POST",
+          body: form,
+        });
+        updateExtensionUi();
+        await refreshSessionSummary();
+        await refreshRecordings({ force: true });
+        return result;
+      }
+
+      async function pollAnalysisJob(jobId) {
+        let lastPayload = null;
+        while (true) {
+          const payload = await api(`/api/analysis-jobs/status?job_id=${encodeURIComponent(jobId)}`);
+          lastPayload = payload;
+          setAnalysisProgress(payload.progress_percent, payload.stage, {
+            estimated: Boolean(payload.progress_estimated),
+          });
+          if (payload.status === "completed") {
+            return payload.result;
+          }
+          if (payload.status === "failed") {
+            throw new Error(payload.error || "分析失败");
+          }
+          await new Promise((resolve) => window.setTimeout(resolve, 700));
+        }
+      }
+
+      function applyAnalysisResult(result, sourceType, requestText) {
+        state.latestListenerSessionId = result.listener_session_id || result.session_id || state.latestListenerSessionId;
+        if (sourceType === "video_analysis") {
+          state.selectedRecordingSessionId = result.listener_session_id || state.selectedRecordingSessionId;
+        }
+        state.analyzedSteps = result.plan?.steps || [];
+        state.analyzedSourceType = sourceType;
+        state.analyzedRequest = requestText;
+        state.analyzedSiteUrl = result.plan?.site_url || "";
+        if (result.suggested_skill_name && isPlaceholderSkillName(els.skillName.value)) {
+          els.skillName.value = result.suggested_skill_name;
+        }
+        if (result.suggested_skill_description && !els.skillDescription.value.trim()) {
+          els.skillDescription.value = result.suggested_skill_description;
+        }
+        renderSteps(state.analyzedSteps);
+        setLogs(result.plan?.steps?.map((step) => `步骤 ${step.step_number}: ${step.action} ${step.target || ""}`.trim()) || []);
+      }
+
+      async function analyzeVideo() {
+        const payload = {
+          video_path: els.videoPath.value.trim() || state.uploadedVideoPath || "",
+          user_request: els.skillRequest.value.trim(),
+          listener_session_id: state.selectedRecordingSessionId || state.latestListenerSessionId || null,
+          start_second: 0,
+          end_second: null,
+          max_frames: 12,
+        };
+        setAnalysisProgress(0, "正在提交视频分析任务");
+        const job = await api("/api/analyze/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await pollAnalysisJob(job.job_id);
+        applyAnalysisResult(result, "video_analysis", payload.user_request);
+        appendResult({
+          title: "视频分析完成",
+          tone: "success",
+          lines: [
+            `提取帧数：${result.frame_count}`,
+            `输出步骤：${state.analyzedSteps.length}`,
+            result.suggested_skill_name ? `建议技能名：${result.suggested_skill_name}` : "",
+          ].filter(Boolean),
+        });
+      }
+
+      async function startDemo() {
+        const sessionId = crypto.randomUUID();
+        state.selectedRecordingSessionId = "";
+        await startScreenRecording(sessionId);
+        let response = null;
+        try {
+          response = await extensionBridge("eyeclaw-listener-start-session-inline", {
+            apiBase: `${location.origin}`,
+            clientName: "eyeclaw-listener",
+            sessionId,
+          });
+        } catch (error) {
+          await stopScreenRecording().catch(() => {});
+          throw error;
+        }
+        state.extensionAvailable = true;
+        state.extensionSettings = response.settings || null;
+        updateExtensionUi();
+        await refreshSessionSummary();
+        await refreshRecordings();
+        appendResult({
+          title: "演示已开始",
+          tone: "success",
+          lines: [
+            "监听和录屏已同步开启；如果目标页还没打开，请现在打开目标网站并完成操作。",
+            "录制权限窗口里建议选择整个 Edge 窗口或屏幕，这样切换标签页也能被录到。",
+            "录屏文件会在点击“停止演示”后上传，所以录制中显示“正在录制，停止后上传”是正常的。",
+            `会话 ID：${state.extensionSettings?.sessionId || "未返回"}`,
+          ],
+        });
+      }
+
+      async function stopDemo() {
+        let response = null;
+        let stopError = null;
+        try {
+          response = await extensionBridge("eyeclaw-listener-stop-session-inline", {
+            apiBase: `${location.origin}`,
+            clientName: "eyeclaw-listener",
+          });
+        } catch (error) {
+          stopError = error;
+        }
+        let recordingResult = null;
+        try {
+          recordingResult = await stopScreenRecording();
+        } catch (error) {
+          stopError = stopError || error;
+        }
+        if (stopError) {
+          throw stopError;
+        }
+        state.extensionAvailable = true;
+        state.extensionSettings = response.settings || null;
+        updateExtensionUi();
+        await refreshSessionSummary();
+        appendResult({
+          title: "演示已停止",
+          tone: "success",
+          lines: [
+            "监听和录屏已关闭，录屏会参与后续抽帧分析。",
+            recordingResult?.recording_path ? `录屏文件：${recordingResult.recording_path}` : "录屏文件已提交。",
+          ],
+        });
+      }
+
+      async function analyzeDemo() {
+        const payload = {
+          session_id: state.extensionSettings?.sessionId || state.latestListenerSessionId || null,
+          user_request: els.skillRequest.value.trim(),
+          max_events: 8,
+        };
+        setAnalysisProgress(0, "正在提交演示分析任务");
+        const job = await api("/api/browser-listener/analyze/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await pollAnalysisJob(job.job_id);
+        applyAnalysisResult(result, "listener_analysis", payload.user_request);
+        await refreshSessionSummary();
+        await refreshRecordings();
+        appendResult({
+          title: "演示分析完成",
+          tone: "success",
+          lines: [
+            `关键截图：${result.frame_count}`,
+            `输出步骤：${state.analyzedSteps.length}`,
+            result.suggested_skill_name ? `建议技能名：${result.suggested_skill_name}` : "",
+          ].filter(Boolean),
+        });
+      }
+
+      async function saveSkill() {
+        if (!state.analyzedSteps.length) {
+          appendResult({
+            title: "保存失败",
+            tone: "warn",
+            lines: ["请先完成一次视频分析或演示分析，再保存技能。"],
+          });
+          return;
+        }
+
+        const payload = {
+          name: els.skillName.value.trim() || "未命名技能",
+          description: els.skillDescription.value.trim(),
+          source_type: state.analyzedSourceType || "analysis",
+          steps: state.analyzedSteps,
+          site_url: state.analyzedSiteUrl || null,
+          user_request: state.analyzedRequest || els.skillRequest.value.trim(),
+          video_path: els.videoPath.value.trim() || state.uploadedVideoPath || null,
+          listener_session_id: state.selectedRecordingSessionId || state.latestListenerSessionId || null,
+        };
+        const data = await api("/api/skills", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        await refreshSkills();
+        appendResult({
+          title: "技能保存成功",
+          tone: "success",
+          lines: [`技能名称：${data.name}`, `步骤数量：${Array.isArray(data.steps) ? data.steps.length : 0}`],
+        });
+      }
+
+      function findSkill(skillId) {
+        return state.skills.find((skill) => skill.id === skillId) || null;
+      }
+
+      async function updateSkill(skillId, payload) {
+        if (!skillId) {
+          throw new Error("缺少技能 ID");
+        }
+        const data = await api(`/api/skills/${encodeURIComponent(skillId)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        await refreshSkills();
+        return data;
+      }
+
+      async function renameSkill(skillId) {
+        const skill = findSkill(skillId);
+        if (!skill) {
+          throw new Error("没有找到这个技能");
+        }
+        const nextName = window.prompt("请输入新的技能名称", skill.name || "未命名技能");
+        if (nextName === null) {
+          return;
+        }
+        const trimmedName = nextName.trim();
+        if (!trimmedName) {
+          throw new Error("技能名称不能为空");
+        }
+        const data = await updateSkill(skillId, { name: trimmedName });
+        appendResult({
+          title: "技能已重命名",
+          tone: "success",
+          lines: [`新名称：${data.name}`],
+        });
+      }
+
+      async function editSkill(skillId) {
+        const skill = findSkill(skillId);
+        if (!skill) {
+          throw new Error("没有找到这个技能");
+        }
+        const nextDescription = window.prompt("请输入新的技能说明", skill.description || "");
+        if (nextDescription === null) {
+          return;
+        }
+        const nextSiteUrl = window.prompt("请输入目标站点，可留空", skill.site_url || "");
+        if (nextSiteUrl === null) {
+          return;
+        }
+        const data = await updateSkill(skillId, {
+          description: nextDescription.trim(),
+          site_url: nextSiteUrl.trim(),
+        });
+        appendResult({
+          title: "技能说明已更新",
+          tone: "success",
+          lines: [`技能：${data.name}`, `站点：${data.site_url || "未绑定站点"}`],
+        });
+      }
+
+      async function deleteSkill(skillId) {
+        const skill = findSkill(skillId);
+        if (!skill) {
+          throw new Error("没有找到这个技能");
+        }
+        if (!window.confirm(`确定删除技能“${skill.name || "未命名技能"}”吗？这个操作不会删除录屏和监听记录。`)) {
+          return;
+        }
+        const data = await api(`/api/skills/${encodeURIComponent(skillId)}`, {
+          method: "DELETE",
+        });
+        state.selectedSkillIds.delete(skillId);
+        await refreshSkills();
+        appendResult({
+          title: "技能已删除",
+          tone: "success",
+          lines: [`技能：${data.skill?.name || skill.name}`],
+        });
+      }
+
+      async function refreshSkills() {
+        const data = await api("/api/skills");
+        state.skills = data.skills || [];
+        state.selectedSkillIds.forEach((skillId) => {
+          if (!state.skills.some((skill) => skill.id === skillId)) {
+            state.selectedSkillIds.delete(skillId);
+          }
+        });
+        renderSkillOptions(state.skills);
+        renderSavedSkills(state.skills);
+      }
+
+      async function pollTaskStatus(taskId) {
+        while (true) {
+          const data = await api(`/api/tasks/${encodeURIComponent(taskId)}`);
+          state.runningTaskId = data.status === "running" ? taskId : "";
+          setLogs(data.logs || []);
+          setTaskProgress(data.progress_percent || 0, data.progress_stage || "处理中", {
+            estimated: Boolean(data.progress_estimated),
+          });
+          if (data.status !== "running") {
+            return data;
+          }
+          await refreshTasks();
+          await new Promise((resolve) => window.setTimeout(resolve, 900));
+        }
+      }
+
+      async function runNow() {
+        const payload = {
+          name: els.taskName.value.trim(),
+          objective: els.taskObjective.value.trim(),
+          cdp_url: els.taskCdpUrl.value.trim(),
+          task_type: els.taskExecutionMode.value,
+          skill_ids: selectedSkillIds(),
+        };
+
+        try {
+          setTaskProgress(3, "正在提交任务");
+          const task = await api("/api/tasks/run-now/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          state.runningTaskId = task.id || "";
+          setLogs(task.logs || []);
+          setTaskProgress(task.progress_percent || 8, task.progress_stage || "任务已开始");
+          const data = await pollTaskStatus(task.id);
+          appendResult({
+            title: data.status === "completed" ? "任务执行完成" : data.status === "manual" ? "任务执行暂停" : "任务执行结果",
+            tone: data.status === "completed" ? "success" : data.status === "manual" ? "warn" : "error",
+            lines: [
+              `状态：${data.status}`,
+              `执行模式：${executionModeLabel(data.task_type)}`,
+              data.current_step && data.total_steps ? `完成进度：第 ${data.current_step}/${data.total_steps} 步` : "",
+              `技能：${(data.skill_names || []).join("、") || "未绑定技能"}`,
+              data.last_error || "",
+            ].filter(Boolean),
+          });
+        } catch (error) {
+          const payloadData = error.payload || {};
+          setLogs(payloadData.logs || []);
+          setTaskProgress(payloadData.progress_percent || 0, payloadData.progress_stage || "执行失败", {
+            estimated: Boolean(payloadData.progress_estimated),
+          });
+          if (error.status === 409 || payloadData.status === "manual") {
+            appendResult({
+              title: "任务执行暂停，等待人工接管",
+              tone: "warn",
+              lines: [
+                payloadData.last_error || payloadData.message || error.message,
+                "请先在 Edge 中完成扫码或确认操作，再回到控制台继续。",
+              ],
+            });
+          } else {
+            appendResult({
+              title: "任务执行失败",
+              tone: "error",
+              lines: [payloadData.last_error || error.message],
+            });
+          }
+        } finally {
+          if (!state.runningTaskId) {
+            await refreshTasks();
+          }
+        }
+      }
+
+      async function saveTask() {
+        const frequency = els.taskFrequency.value;
+        if (frequency === "immediate") {
+          await runNow();
+          return;
+        }
+
+        const payload = {
+          name: els.taskName.value.trim() || "未命名任务",
+          objective: els.taskObjective.value.trim(),
+          cdp_url: els.taskCdpUrl.value.trim(),
+          task_type: els.taskExecutionMode.value,
+          skill_ids: selectedSkillIds(),
+          frequency,
+          run_at_iso: els.taskRunAt.value ? new Date(els.taskRunAt.value).toISOString() : null,
+        };
+        const data = await api("/api/schedules", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        appendResult({
+          title: "任务保存成功",
+          tone: "success",
+          lines: [`任务名称：${data.name}`, `执行模式：${executionModeLabel(data.task_type)}`, `执行频次：${data.frequency}`],
+        });
+        await refreshTasks();
+      }
+
+      async function refreshTasks() {
+        const data = await api("/api/schedules");
+        const tasks = data.tasks || [];
+        renderTasks(tasks);
+        const runningTask = tasks.find((task) => task.status === "running");
+        if (runningTask) {
+          state.runningTaskId = runningTask.id || "";
+          setLogs(runningTask.logs || []);
+          setTaskProgress(runningTask.progress_percent || 0, runningTask.progress_stage || "任务执行中", {
+            estimated: Boolean(runningTask.progress_estimated),
+          });
+        }
+      }
+
+      function startAutoRefresh() {
+        if (state.refreshTimer) {
+          window.clearInterval(state.refreshTimer);
+        }
+        state.refreshTimer = window.setInterval(async () => {
+          await refreshExtensionState();
+          await refreshSessionSummary();
+          await refreshRecordings();
+          await refreshTasks();
+        }, 4000);
+      }
+
+      function handleError(context, error) {
+        appendResult({
+          title: `${context}失败`,
+          tone: "error",
+          lines: [error.message || String(error)],
+        });
+      }
+
+      els.tabs.forEach((button) => {
+        button.addEventListener("click", () => setActivePanel(button.dataset.panel));
+      });
+
+      els.taskFrequency.addEventListener("change", syncFrequencyVisibility);
+      els.skillSearch.addEventListener("input", () => renderSavedSkills(state.skills));
+      els.taskSkillSearch.addEventListener("input", () => renderSkillOptions(state.skills));
+      els.refreshSkillsBtn.addEventListener("click", () => refreshSkills().catch((error) => handleError("刷新技能", error)));
+      els.uploadBtn.addEventListener("click", () => uploadVideo().catch((error) => handleError("上传视频", error)));
+      els.analyzeVideoBtn.addEventListener("click", () => analyzeVideo().catch((error) => handleError("分析视频", error)));
+      els.startDemoBtn.addEventListener("click", () => startDemo().catch((error) => handleError("开始演示", error)));
+      els.stopDemoBtn.addEventListener("click", () => stopDemo().catch((error) => handleError("停止演示", error)));
+      els.analyzeDemoBtn.addEventListener("click", () => analyzeDemo().catch((error) => handleError("分析演示", error)));
+      els.saveSkillBtn.addEventListener("click", () => saveSkill().catch((error) => handleError("保存技能", error)));
+      els.runNowBtn.addEventListener("click", () => runNow().catch((error) => handleError("执行任务", error)));
+      els.saveTaskBtn.addEventListener("click", () => saveTask().catch((error) => handleError("保存任务", error)));
+      els.refreshTasksBtn.addEventListener("click", () => refreshTasks().catch((error) => handleError("刷新任务列表", error)));
+
+      setDefaultRunAt();
+      syncFrequencyVisibility();
+      setResult([]);
+      renderSteps([]);
+      renderRecordings([]);
+      renderSavedSkills([]);
+      setLogs([]);
+      setAnalysisProgress(0, "等待开始");
+      setTaskProgress(0, "等待执行");
+      renderListenerStatus(null);
+
+      Promise.allSettled([loadStatus(), refreshExtensionState(), refreshSkills(), refreshTasks(), refreshRecordings()])
+        .then(() => refreshSessionSummary())
+        .catch(() => {})
+        .finally(() => startAutoRefresh());
+    </script>
+  </body>
+</html>

@@ -4,7 +4,7 @@ import base64
 import json
 import re
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 import requests
 from requests import Response
@@ -12,6 +12,10 @@ from requests.exceptions import RequestException
 
 from src.config import AppConfig
 from src.prompts import GLM_SYSTEM_PROMPT, build_glm_user_prompt
+
+
+DEFAULT_FRAME_BATCH_SIZE = 3
+BatchProgressCallback = Callable[[int, int], None]
 
 
 class GLMClient:
@@ -34,16 +38,60 @@ class GLMClient:
         site_url: str,
         user_request: str | None = None,
         frame_hints: Sequence[str] | None = None,
+        batch_progress_callback: BatchProgressCallback | None = None,
     ) -> dict[str, Any]:
+        if not frame_paths:
+            return {
+                "session_summary": "",
+                "observed_actions": [],
+                "uncertainties": ["No frames were provided for GLM analysis."],
+            }
+
+        batches = list(split_frame_batches(frame_paths, frame_hints, batch_size=DEFAULT_FRAME_BATCH_SIZE))
+        batch_outputs = []
+        for batch_index, (batch_frame_paths, batch_hints) in enumerate(batches, start=1):
+            batch_outputs.append(
+                self._analyze_frame_batch(
+                    frame_paths=batch_frame_paths,
+                    site_url=site_url,
+                    user_request=user_request,
+                    frame_hints=batch_hints,
+                    batch_index=batch_index,
+                    batch_count=len(batches),
+                )
+            )
+            if batch_progress_callback is not None:
+                batch_progress_callback(batch_index, len(batches))
+        if len(batch_outputs) == 1:
+            return batch_outputs[0]
+        return merge_batch_outputs(batch_outputs)
+
+    def _analyze_frame_batch(
+        self,
+        frame_paths: list[Path],
+        site_url: str,
+        user_request: str | None = None,
+        frame_hints: Sequence[str] | None = None,
+        *,
+        batch_index: int,
+        batch_count: int,
+    ) -> dict[str, Any]:
+        prompt_text = build_glm_user_prompt(
+            site_url,
+            frame_paths,
+            user_request=user_request,
+            frame_hints=frame_hints,
+        )
+        if batch_count > 1:
+            prompt_text += (
+                f"\nThis batch is part {batch_index} of {batch_count} from one chronological workflow."
+                "\nKeep the actions strictly in chronological order within this batch."
+            )
+
         content: list[dict[str, Any]] = [
             {
                 "type": "text",
-                "text": build_glm_user_prompt(
-                    site_url,
-                    frame_paths,
-                    user_request=user_request,
-                    frame_hints=frame_hints,
-                ),
+                "text": prompt_text,
             }
         ]
         for frame_path in frame_paths:
@@ -71,6 +119,49 @@ class GLMClient:
         response_json = response.json()
         content_text = response_json["choices"][0]["message"]["content"]
         return json.loads(extract_json_text(content_text))
+
+
+def split_frame_batches(
+    frame_paths: Sequence[Path],
+    frame_hints: Sequence[str] | None,
+    *,
+    batch_size: int,
+) -> list[tuple[list[Path], list[str] | None]]:
+    normalized_batch_size = max(1, int(batch_size))
+    batches: list[tuple[list[Path], list[str] | None]] = []
+    for start in range(0, len(frame_paths), normalized_batch_size):
+        end = start + normalized_batch_size
+        batch_paths = list(frame_paths[start:end])
+        batch_hints = list(frame_hints[start:end]) if frame_hints is not None else None
+        batches.append((batch_paths, batch_hints))
+    return batches
+
+
+def merge_batch_outputs(batch_outputs: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    merged_actions: list[dict[str, Any]] = []
+    merged_uncertainties: list[str] = []
+    summaries: list[str] = []
+
+    for batch_index, output in enumerate(batch_outputs, start=1):
+        summary = str(output.get("session_summary") or "").strip()
+        if summary:
+            summaries.append(summary)
+
+        for item in output.get("observed_actions", []) or []:
+            action = dict(item)
+            action["step_number"] = len(merged_actions) + 1
+            merged_actions.append(action)
+
+        for note in output.get("uncertainties", []) or []:
+            text = str(note).strip()
+            if text:
+                merged_uncertainties.append(f"batch {batch_index}: {text}")
+
+    return {
+        "session_summary": " ".join(summaries).strip(),
+        "observed_actions": merged_actions,
+        "uncertainties": merged_uncertainties,
+    }
 
 
 def image_file_to_data_url(image_path: Path) -> str:
