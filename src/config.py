@@ -64,7 +64,9 @@ class ConfigStatus(BaseModel):
 
 
 def load_config_status() -> ConfigStatus:
-    load_dotenv(dotenv_path=Path(".env"), override=False)
+    # The local UI is long-running; reloading with override lets .env edits take
+    # effect without keeping stale model settings in process environment vars.
+    load_dotenv(dotenv_path=Path(".env"), override=True)
     try:
         return ConfigStatus(is_ready=True, config=AppConfig())
     except ValidationError as exc:

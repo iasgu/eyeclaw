@@ -120,12 +120,102 @@ def run_replay_plan(
             progress_callback(message)
 
     page = prepare_execution_page(session, replay_plan, emit)
-    for step in replay_plan.steps:
+    for index, step in enumerate(replay_plan.steps):
         emit(f"Step {step.step_number}: {step.action} -> {step.target or '(no target)'}")
         execute_step(page=page, site_url=replay_plan.site_url, step=step, progress_callback=emit)
         emit(f"Step {step.step_number}: success")
+        next_step = replay_plan.steps[index + 1] if index + 1 < len(replay_plan.steps) else None
+        page = refresh_replay_page_after_step(session, page, next_step, emit)
 
     return logs
+
+
+def refresh_replay_page_after_step(
+    session: ReplaySession,
+    current_page: Page,
+    next_step: ReplayStep | None,
+    emit: ProgressCallback | None = None,
+) -> Page:
+    context = session.context or getattr(current_page, "context", None)
+    if context is None:
+        return current_page
+
+    if next_step is not None and next_step.action == "wait":
+        candidate = wait_for_page_matching_step_target(context, next_step, current_page=current_page, timeout_ms=2_000)
+        if candidate is not None and candidate != current_page:
+            try:
+                candidate.bring_to_front()
+            except Exception:
+                pass
+            session.page = candidate
+            if emit is not None:
+                emit(f"Execution moved to browser page: {candidate.url or safe_page_title(candidate)}")
+            return candidate
+
+    try:
+        if current_page.is_closed():
+            candidate = choose_best_context_page(context)
+            session.page = candidate
+            return candidate
+    except Exception:
+        pass
+    return current_page
+
+
+def wait_for_page_matching_step_target(
+    context: BrowserContext,
+    step: ReplayStep,
+    *,
+    current_page: Page,
+    timeout_ms: int,
+) -> Page | None:
+    target = step.target.strip()
+    if not target:
+        return None
+
+    deadline = time.monotonic() + max(timeout_ms, 0) / 1000.0
+    while True:
+        candidate = find_page_matching_step_target(context, step)
+        if candidate is not None:
+            return candidate
+        if time.monotonic() >= deadline:
+            return None
+        try:
+            current_page.wait_for_timeout(100)
+        except Exception:
+            time.sleep(0.1)
+
+
+def find_page_matching_step_target(context: BrowserContext, step: ReplayStep) -> Page | None:
+    target = step.target.strip()
+    if not target:
+        return None
+    pages = [
+        page
+        for page in reversed(list(getattr(context, "pages", []) or []))
+        if page is not None and not page_is_closed(page)
+    ]
+    if _looks_like_url_wait_target(target):
+        for page in pages:
+            if url_matches_target(page.url or "", target):
+                return page
+
+    variants = target_text_variants(target)
+    normalized_variants = [normalize_for_match(variant) for variant in variants if variant]
+    if not normalized_variants:
+        return None
+    for page in pages:
+        haystack = normalize_for_match(" ".join([page.url or "", safe_page_title(page)]))
+        if any(variant and variant in haystack for variant in normalized_variants):
+            return page
+    return None
+
+
+def page_is_closed(page: Page) -> bool:
+    try:
+        return bool(page.is_closed())
+    except Exception:
+        return False
 
 
 def prepare_execution_page(
@@ -182,6 +272,10 @@ def execute_step_once(
         handle_scroll(page, step)
         return
 
+    if step.action == "press":
+        handle_press(page, step, progress_callback=progress_callback)
+        return
+
     locator = resolve_locator(page, step, site_url=site_url, progress_callback=progress_callback)
     if step.action == "click":
         click_locator(locator, timeout_ms=5_000)
@@ -194,6 +288,38 @@ def execute_step_once(
         return
 
     raise ValueError(f"Unsupported replay action: {step.action}")
+
+
+def handle_press(page: Page, step: ReplayStep, progress_callback: ProgressCallback | None = None) -> None:
+    shortcut = normalize_keyboard_shortcut(step.value or step.target)
+    if not shortcut:
+        raise ValueError("Keyboard shortcut is required for press action.")
+    if progress_callback is not None:
+        progress_callback(f"Step {step.step_number}: pressing keyboard shortcut {shortcut}")
+    page.keyboard.press(shortcut)
+    page.wait_for_timeout(500)
+
+
+def normalize_keyboard_shortcut(value: str) -> str:
+    aliases = {
+        "ctrl": "Control",
+        "control": "Control",
+        "cmd": "Meta",
+        "command": "Meta",
+        "win": "Meta",
+        "meta": "Meta",
+        "alt": "Alt",
+        "shift": "Shift",
+        "esc": "Escape",
+        "escape": "Escape",
+        "space": "Space",
+    }
+    parts = [part.strip() for part in str(value or "").replace("-", "+").split("+") if part.strip()]
+    normalized: list[str] = []
+    for part in parts:
+        mapped = aliases.get(part.lower())
+        normalized.append(mapped or (part.upper() if len(part) == 1 else part))
+    return "+".join(normalized)
 
 
 def recover_step_execution(
@@ -451,12 +577,13 @@ def handle_select(
         locator.select_option(index=0)
         return
 
-    try:
-        locator.select_option(label=desired, timeout=2_500)
-        verify_selection_state(page, desired)
-        return
-    except Exception:
-        pass
+    if locator_is_native_select(locator):
+        try:
+            locator.select_option(label=desired, timeout=2_500)
+            verify_selection_state(page, desired)
+            return
+        except Exception:
+            pass
 
     try:
         locator.click(timeout=3_000)
@@ -479,6 +606,13 @@ def handle_select(
         return
 
     raise ValueError(f"Unable to select option: {desired}")
+
+
+def locator_is_native_select(locator) -> bool:
+    try:
+        return bool(locator.evaluate("(element) => (element.tagName || '').toLowerCase() === 'select'"))
+    except Exception:
+        return False
 
 
 def handle_wait(
@@ -681,31 +815,12 @@ def _looks_like_url_wait_target(target: str) -> bool:
 
 
 def choose_plan_page(session: ReplaySession, replay_plan: ReplayPlan) -> Page:
-    current_page = session.page
-    if replay_plan.steps and replay_plan.steps[0].action == "open":
-        return current_page
-    if current_page_looks_compatible_with_plan(current_page, replay_plan):
-        return current_page
-
-    context = session.context
-    if context is not None:
-        matching_page = find_page_for_site(context, replay_plan.site_url)
-        if matching_page is not None:
-            try:
-                matching_page.bring_to_front()
-            except Exception:
-                pass
-            return matching_page
-
-        if should_create_execution_tab(current_page, replay_plan.site_url):
-            new_page = context.new_page()
-            try:
-                new_page.bring_to_front()
-            except Exception:
-                pass
-            return new_page
-
-    return current_page
+    if session.context is not None:
+        if should_create_execution_tab(session.page, replay_plan.site_url):
+            page = session.context.new_page()
+            session.page = page
+            return page
+    return session.page
 
 
 def find_page_for_site(context: BrowserContext, site_url: str) -> Page | None:
@@ -713,7 +828,8 @@ def find_page_for_site(context: BrowserContext, site_url: str) -> Page | None:
     if not target_host:
         return None
 
-    candidates = [page for page in context.pages if page and not page.is_closed()]
+    raw_pages = getattr(context, "pages", [])
+    candidates = [page for page in raw_pages if page and not getattr(page, "is_closed", lambda: False)()]
     exact_matches = [page for page in candidates if normalized_host(page.url) == target_host]
     if exact_matches:
         return exact_matches[-1]
@@ -724,19 +840,13 @@ def find_page_for_site(context: BrowserContext, site_url: str) -> Page | None:
 
 
 def should_create_execution_tab(page: Page, site_url: str) -> bool:
-    current_host = normalized_host(page.url)
     target_host = normalized_host(site_url)
     if not target_host:
         return False
-    if current_host == target_host:
+    current_url = str(getattr(page, "url", "") or "").strip()
+    if not current_url or current_url.startswith("about:"):
         return False
-    return (
-        not current_host
-        or current_host in {"127.0.0.1:8018", "localhost:8018", "127.0.0.1:8021", "localhost:8021"}
-        or page.url.startswith("edge://")
-        or page.url.startswith("chrome://")
-        or page.url.startswith("devtools://")
-    )
+    return True
 
 
 def should_open_plan_site(page: Page, replay_plan: ReplayPlan) -> bool:
@@ -1081,12 +1191,18 @@ def click_dropdown_option(
     progress_callback: ProgressCallback | None = None,
 ) -> bool:
     desired_variants = target_text_variants(desired)
-    for attempt in range(8):
+    for attempt in range(12):
         result = page.evaluate(
             """
             ({ variants }) => {
               const normalize = (value) => (value || '').normalize('NFKC').toLowerCase().replace(/[\\s\\W_]+/g, '');
               const normalizedVariants = variants.map(normalize).filter(Boolean);
+              const isVisible = (node) => {
+                if (!node) return false;
+                const rect = node.getBoundingClientRect();
+                const style = window.getComputedStyle(node);
+                return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+              };
               const optionSelector = [
                 '[role="option"]',
                 '[role="menuitem"]',
@@ -1099,11 +1215,7 @@ def click_dropdown_option(
                 'li',
                 'option'
               ].join(',');
-              const options = Array.from(document.querySelectorAll(optionSelector)).filter((node) => {
-                const rect = node.getBoundingClientRect();
-                const style = window.getComputedStyle(node);
-                return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
-              });
+              const options = Array.from(document.querySelectorAll(optionSelector)).filter(isVisible);
               const candidates = options.map((node, index) => {
                 const text = (node.innerText || node.textContent || node.getAttribute('aria-label') || node.getAttribute('title') || '').replace(/\\s+/g, ' ').trim();
                 const normalizedText = normalize(text);
@@ -1118,9 +1230,39 @@ def click_dropdown_option(
               candidates.sort((a, b) => b.score - a.score);
               const best = candidates[0];
               if (!best) {
-                return { ok: false, reason: 'option-not-visible', visibleOptions: options.slice(0, 20).map((node) => (node.innerText || node.textContent || '').replace(/\\s+/g, ' ').trim()) };
+                const scrollSelector = [
+                  '.el-select-dropdown .el-scrollbar__wrap',
+                  '.el-select-dropdown__wrap',
+                  '.el-cascader-menu',
+                  '.el-dropdown-menu',
+                  '.ant-select-dropdown .rc-virtual-list-holder',
+                  '.ant-cascader-dropdown .ant-cascader-menu',
+                  '.select2-results__options',
+                  '[role="listbox"]',
+                  '[role="menu"]',
+                  '.dropdown-menu'
+                ].join(',');
+                const containers = Array.from(document.querySelectorAll(scrollSelector)).filter(isVisible);
+                let scrolled = false;
+                for (const container of containers) {
+                  const before = container.scrollTop;
+                  const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+                  if (maxScroll > before) {
+                    container.scrollTop = Math.min(maxScroll, before + Math.max(220, container.clientHeight * 0.85));
+                    container.dispatchEvent(new Event('scroll', { bubbles: true }));
+                    scrolled = scrolled || container.scrollTop !== before;
+                  }
+                }
+                return {
+                  ok: false,
+                  reason: 'option-not-visible',
+                  scrolled,
+                  visibleOptions: options.slice(0, 20).map((node) => (node.innerText || node.textContent || '').replace(/\\s+/g, ' ').trim())
+                };
               }
               best.node.scrollIntoView({ block: 'center', inline: 'nearest' });
+              best.node.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+              best.node.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
               best.node.click();
               return { ok: true, text: best.text, score: best.score };
             }
@@ -1132,8 +1274,9 @@ def click_dropdown_option(
                 progress_callback(f"Selected dropdown option: {result.get('text')} (score={result.get('score')})")
             return True
 
-        page.mouse.wheel(0, 650)
-        page.wait_for_timeout(300 + attempt * 100)
+        if not result or not result.get("scrolled"):
+            page.mouse.wheel(0, 650)
+        page.wait_for_timeout(250 + attempt * 75)
     return False
 
 

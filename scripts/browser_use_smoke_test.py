@@ -15,6 +15,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 from src.config import load_config_status
+from src.webapp import _build_browser_use_llm
 
 
 EDGE_EXE = Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe")
@@ -50,9 +51,9 @@ class SmokeHandler(BaseHTTPRequestHandler):
 
 
 async def run_smoke() -> object:
-    from browser_use import Agent, BrowserSession, ChatOpenAI
+    from browser_use import Agent, BrowserSession
 
-    load_dotenv(ROOT / ".env", override=False)
+    load_dotenv(ROOT / ".env", override=True)
     status = load_config_status()
     if not status.is_ready or status.config is None:
         raise RuntimeError(f"Config is not ready: {status.missing_fields}")
@@ -60,13 +61,7 @@ async def run_smoke() -> object:
         raise FileNotFoundError(f"Edge executable not found: {EDGE_EXE}")
 
     PROFILE_DIR.mkdir(parents=True, exist_ok=True)
-    llm = ChatOpenAI(
-        model=status.config.deepseek_model,
-        api_key=status.config.deepseek_api_key,
-        base_url=status.config.deepseek_base_url,
-        temperature=0,
-        max_completion_tokens=2048,
-    )
+    llm = _build_browser_use_llm(status.config, fast_mode=True, llm_timeout=60)
     browser_session = BrowserSession(
         channel="msedge",
         executable_path=str(EDGE_EXE),

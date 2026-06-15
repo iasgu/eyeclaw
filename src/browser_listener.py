@@ -22,6 +22,7 @@ BrowserEventType = Literal[
     "tab_updated",
     "page_loaded",
     "click",
+    "keyboard_shortcut",
     "input",
     "change",
     "scroll",
@@ -378,6 +379,27 @@ class BrowserEventStore:
         ordered.sort(key=lambda recording: recording.saved_at_iso, reverse=True)
         return ordered[:capped_limit]
 
+    def list_session_summaries(self, limit: int = 20) -> list[dict[str, Any]]:
+        capped_limit = max(1, min(limit, 100))
+        session_ids: set[str] = set()
+        with self._lock:
+            session_ids.update(event.session_id for event in self._events)
+            session_ids.update(self._recordings.keys())
+            session_ids.update(self._persisted_session_cache.keys())
+        if self._artifact_root.exists():
+            for child in self._artifact_root.iterdir():
+                if child.is_dir() and (
+                    (child / "events.jsonl").exists() or (child / "recording.json").exists()
+                ):
+                    session_ids.add(child.name)
+
+        summaries = [self.session_summary(session_id) for session_id in session_ids]
+        summaries.sort(
+            key=lambda summary: str(summary.get("last_event_at_iso") or summary.get("recording_saved_at_iso") or ""),
+            reverse=True,
+        )
+        return summaries[:capped_limit]
+
     def session_summary(self, session_id: str) -> dict[str, Any]:
         events = self._filtered_snapshot(session_id=session_id)
         recording = self.get_session_recording(session_id)
@@ -399,6 +421,7 @@ class BrowserEventStore:
             "recording_mime_type": recording.mime_type if recording else None,
             "recording_started_at_ms": recording.started_at_ms if recording else None,
             "recording_ended_at_ms": recording.ended_at_ms if recording else None,
+            "recording_saved_at_iso": recording.saved_at_iso if recording else None,
             "last_event_type": last_event.event_type if last_event else None,
             "last_event_at_iso": last_event.received_at_iso if last_event else None,
         }
@@ -615,6 +638,7 @@ def infer_key_candidate(event: BrowserEventIn) -> bool:
         "tab_updated",
         "page_loaded",
         "click",
+        "keyboard_shortcut",
         "change",
     }:
         return True
@@ -649,6 +673,11 @@ def summarize_browser_event(event: BrowserEvent) -> str:
         parts.append(f"target={event.target_text}")
     elif event.target_tag:
         parts.append(f"target={event.target_tag}")
+
+    if event.event_type == "keyboard_shortcut":
+        shortcut = trim_text(str(event.details.get("shortcut") or event.input_value or ""), limit=80)
+        if shortcut and f"target={shortcut}" not in parts:
+            parts.append(f"shortcut={shortcut}")
 
     if event.input_value:
         parts.append(f"value={event.input_value}")
@@ -797,7 +826,7 @@ def plan_listener_guided_frames(
                 relative="after",
             )
             for event, center in zip(key_events, center_candidates)
-            if event.event_type in {"navigation", "history", "tab_activated", "tab_updated", "page_loaded", "click", "change"}
+            if event.event_type in {"navigation", "history", "tab_activated", "tab_updated", "page_loaded", "click", "keyboard_shortcut", "change"}
         ]
         chosen = _merge_spaced_candidates(chosen, after_candidates, max_frames=max_frames, min_gap=min_gap)
 
@@ -809,7 +838,7 @@ def plan_listener_guided_frames(
                 relative="before",
             )
             for event, center in zip(key_events, center_candidates)
-            if event.event_type in {"navigation", "history", "tab_activated", "tab_updated", "page_loaded", "click", "change"}
+            if event.event_type in {"navigation", "history", "tab_activated", "tab_updated", "page_loaded", "click", "keyboard_shortcut", "change"}
         ]
         chosen = _merge_spaced_candidates(chosen, before_candidates, max_frames=max_frames, min_gap=min_gap)
 

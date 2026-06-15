@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any, Callable, Sequence
@@ -94,11 +95,16 @@ class GLMClient:
                 "text": prompt_text,
             }
         ]
+        use_glm_format = _is_glm_model_or_endpoint(self._config.glm_model, self._config.glm_base_url)
         for frame_path in frame_paths:
             content.append(
                 {
                     "type": "image_url",
-                    "image_url": {"url": image_file_to_data_url(frame_path)},
+                    "image_url": {
+                        "url": image_file_to_base64(frame_path)
+                        if use_glm_format
+                        else image_file_to_data_url(frame_path)
+                    },
                 }
             )
 
@@ -109,6 +115,8 @@ class GLMClient:
                 {"role": "user", "content": content},
             ],
         }
+        if use_glm_format:
+            payload["thinking"] = {"type": os.getenv("VLM_GLM_THINKING", "disabled")}
         response = post_chat_completion(
             endpoint=self.endpoint,
             api_key=self._config.glm_api_key,
@@ -167,8 +175,17 @@ def merge_batch_outputs(batch_outputs: Sequence[dict[str, Any]]) -> dict[str, An
 def image_file_to_data_url(image_path: Path) -> str:
     suffix = image_path.suffix.lower().lstrip(".") or "png"
     mime_type = "jpeg" if suffix in {"jpg", "jpeg"} else suffix
-    encoded = base64.b64encode(image_path.read_bytes()).decode("utf-8")
-    return f"data:image/{mime_type};base64,{encoded}"
+    return f"data:image/{mime_type};base64,{image_file_to_base64(image_path)}"
+
+
+def image_file_to_base64(image_path: Path) -> str:
+    return base64.b64encode(image_path.read_bytes()).decode("utf-8")
+
+
+def _is_glm_model_or_endpoint(model: str, base_url: str) -> bool:
+    normalized_model = str(model or "").strip().lower()
+    normalized_base_url = str(base_url or "").strip().lower()
+    return normalized_model.startswith("glm") or "bigmodel.cn" in normalized_base_url or "zhipu" in normalized_base_url
 
 
 def raise_for_status_with_detail(response: Response, provider: str) -> None:

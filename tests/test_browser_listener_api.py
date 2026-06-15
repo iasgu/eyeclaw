@@ -509,6 +509,53 @@ def test_recordings_route_returns_playable_video_and_smart_title(tmp_path, monke
     assert "搜索" in recording["title"]
 
 
+def test_recordings_route_includes_listener_only_sessions(tmp_path, monkeypatch) -> None:
+    original_store = webapp_module.BROWSER_EVENT_STORE
+
+    monkeypatch.chdir(tmp_path)
+    store = BrowserEventStore(max_events=20, artifact_root=tmp_path / "listener")
+    store.ingest(
+        BrowserEventBatchIn.model_validate(
+            {
+                "client_name": "listener",
+                "session_id": "listener-only-session",
+                "events": [
+                    {
+                        "event_type": "click",
+                        "target_text": "Search",
+                        "page_title": "Example Site",
+                        "page_url": "https://example.com/",
+                        "client_timestamp_ms": 1000,
+                        "key_candidate": True,
+                        "screenshot_data_url": (
+                            "data:image/png;base64,"
+                            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Z7nQAAAAASUVORK5CYII="
+                        ),
+                    }
+                ],
+            }
+        )
+    )
+
+    webapp_module.BROWSER_EVENT_STORE = store
+    try:
+        request = DummyRequest({})
+        request.query_params = {"limit": "10"}
+        response = asyncio.run(webapp_module.list_browser_listener_recordings(request))
+    finally:
+        webapp_module.BROWSER_EVENT_STORE = original_store
+
+    assert response.status_code == 200
+    payload = json.loads(response.body)
+    assert payload["count"] == 1
+    recording = payload["recordings"][0]
+    assert recording["session_id"] == "listener-only-session"
+    assert recording["has_recording"] is False
+    assert recording["video_url"] is None
+    assert recording["listener_analysis_ready"] is True
+    assert recording["event_count"] == 1
+
+
 def test_recording_title_prefers_target_site_over_search_engine() -> None:
     store = BrowserEventStore(max_events=20)
     events = store.ingest(
@@ -845,7 +892,7 @@ def test_listener_analysis_job_routes_report_progress_and_result() -> None:
     assert status_payload["result"]["session_id"] == "job-session"
 
 
-def test_analysis_job_store_smooths_running_progress_without_losing_reported_value() -> None:
+def test_analysis_job_store_reports_running_progress_as_activity() -> None:
     store = webapp_module.AnalysisJobStore()
     job = store.create_job("video_analysis", stage="正在抽取关键帧...")
     store.update(job.id, progress_percent=82, stage="正在调用多模态模型分析...")
@@ -858,6 +905,12 @@ def test_analysis_job_store_smooths_running_progress_without_losing_reported_val
 
     assert payload is not None
     assert payload["reported_progress_percent"] == 82
-    assert payload["progress_percent"] >= 82
-    assert payload["progress_percent"] <= 96
+    assert payload["progress_percent"] == 82
+    assert payload["progress_mode"] == "activity"
     assert payload["progress_estimated"] is True
+
+
+def test_model_input_summary_reports_real_frame_and_batch_counts() -> None:
+    assert webapp_module._model_input_summary(0, "关键帧") == "实际送入模型：0 张关键帧。"
+    assert webapp_module._model_input_summary(1, "关键帧") == "实际送入模型：1 张关键帧，分 1 批。"
+    assert webapp_module._model_input_summary(12, "候选截图") == "实际送入模型：12 张候选截图，分 4 批。"

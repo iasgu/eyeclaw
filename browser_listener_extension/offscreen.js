@@ -11,7 +11,7 @@ function buildVideoConstraints(streamId) {
 
 async function uploadRecording(recording) {
   if (!recording || !recording.blob) {
-    return;
+    return null;
   }
 
   const form = new FormData();
@@ -32,17 +32,24 @@ async function uploadRecording(recording) {
     throw new Error(`Recording upload failed: ${response.status} ${text}`);
   }
 
+  const payload = await response.json().catch(() => null);
+
   chrome.runtime.sendMessage({
     type: "eyeclaw-listener-recording-uploaded",
     payload: {
       sessionId: recording.sessionId
     }
   });
+
+  return payload;
 }
 
 async function stopCurrentRecording() {
   if (!currentRecording) {
-    return;
+    return {
+      skipped: true,
+      reason: "no-current-recording"
+    };
   }
 
   const active = currentRecording;
@@ -69,8 +76,12 @@ async function stopCurrentRecording() {
     active.blob = new Blob(active.chunks, { type: active.mimeType || "video/webm" });
   }
 
-  await uploadRecording(active);
+  const upload = await uploadRecording(active);
   currentRecording = null;
+  return {
+    skipped: false,
+    upload
+  };
 }
 
 async function startRecording(message) {
@@ -114,6 +125,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 
+  if (message.type === "ping") {
+    sendResponse({ ok: true });
+    return false;
+  }
+
   if (message.type === "start-recording") {
     startRecording(message)
       .then(() => sendResponse({ ok: true }))
@@ -123,7 +139,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === "stop-recording") {
     stopCurrentRecording()
-      .then(() => sendResponse({ ok: true }))
+      .then((result) => sendResponse({ ok: true, result }))
       .catch((error) => sendResponse({ ok: false, error: String(error) }));
     return true;
   }

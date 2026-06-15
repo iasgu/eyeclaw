@@ -15,6 +15,18 @@ def test_observed_action_accepts_supported_action() -> None:
     assert action.action == "click"
 
 
+def test_observed_action_accepts_keyboard_shortcut_alias() -> None:
+    action = ObservedAction(
+        step_number=1,
+        action="keyboard-shortcut",
+        target="Ctrl+S",
+        evidence="The recording shows a save shortcut.",
+        confidence=0.9,
+    )
+
+    assert action.action == "press"
+
+
 def test_observed_action_rejects_unsupported_action() -> None:
     try:
         ObservedAction(step_number=1, action="drag", target="Card")

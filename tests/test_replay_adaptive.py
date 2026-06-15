@@ -6,9 +6,11 @@ from src.dsl import ReplayPlan
 from src.replay import (
     current_page_looks_compatible_with_plan,
     execute_step,
+    handle_select,
     handle_wait,
     parse_scroll_amount,
     resolve_locator,
+    run_replay_plan,
     score_element_snapshot,
     target_text_variants,
     url_matches_target,
@@ -132,6 +134,105 @@ def test_handle_wait_treats_url_timeout_as_soft_stability_hint(monkeypatch) -> N
 
     assert any("URL wait skipped" in item for item in calls)
     assert "timeout:800" in calls
+
+
+def test_run_replay_plan_switches_to_new_page_matching_next_wait(monkeypatch) -> None:
+    calls: list[tuple[int, str]] = []
+
+    class FakePage:
+        def __init__(self, url, title=""):
+            self.url = url
+            self._title = title
+            self.context = None
+
+        def title(self):
+            return self._title
+
+        def is_closed(self):
+            return False
+
+        def wait_for_timeout(self, timeout):
+            return None
+
+        def bring_to_front(self):
+            return None
+
+    class FakeContext:
+        def __init__(self, pages):
+            self.pages = pages
+
+    home_page = FakePage("https://eia.51dzhp.com/#/", "大众环评")
+    report_page = FakePage("https://eia.51dzhp.com/#/eia/environmentalReport", "列表搜文本")
+    context = FakeContext([home_page])
+    home_page.context = context
+    report_page.context = context
+    session = SimpleNamespace(context=context, page=home_page)
+    plan = ReplayPlan.model_validate(
+        {
+            "site_url": "https://eia.51dzhp.com/#/",
+            "steps": [
+                {"step_number": 1, "action": "click", "target": "藏经阁"},
+                {"step_number": 2, "action": "wait", "target": "https://eia.51dzhp.com/#/eia/environmentalReport"},
+            ],
+        }
+    )
+
+    monkeypatch.setattr("src.replay.prepare_execution_page", lambda session, replay_plan, emit=None: home_page)
+
+    def fake_execute_step(page, site_url, step, progress_callback=None):
+        calls.append((step.step_number, page.url))
+        if step.step_number == 1:
+            context.pages.append(report_page)
+
+    monkeypatch.setattr("src.replay.execute_step", fake_execute_step)
+
+    logs = run_replay_plan(session, plan)
+
+    assert calls == [
+        (1, "https://eia.51dzhp.com/#/"),
+        (2, "https://eia.51dzhp.com/#/eia/environmentalReport"),
+    ]
+    assert any("Execution moved to browser page" in item for item in logs)
+
+
+def test_handle_select_skips_native_select_timeout_for_custom_dropdown() -> None:
+    calls: list[str] = []
+
+    class FakeLocator:
+        def evaluate(self, script):
+            calls.append("tag-check")
+            return False
+
+        def select_option(self, *args, **kwargs):
+            raise AssertionError("custom dropdowns should not call native select_option")
+
+        def click(self, timeout=None):
+            calls.append("trigger-click")
+
+    class FakeBody:
+        def inner_text(self, timeout=None):
+            return "已选择 食品制造业"
+
+    class FakePage:
+        url = "https://eia.51dzhp.com/#/eia/environmentalReport"
+
+        def evaluate(self, script, args):
+            calls.append("option-click")
+            return {"ok": True, "text": "食品制造业", "score": 100}
+
+        def wait_for_timeout(self, timeout):
+            calls.append(f"wait:{timeout}")
+
+        def locator(self, selector):
+            return FakeBody()
+
+    step = SimpleNamespace(step_number=3, target="请选择", value="食品制造业")
+
+    handle_select(FakePage(), FakeLocator(), step, progress_callback=calls.append)
+
+    assert "tag-check" in calls
+    assert "trigger-click" in calls
+    assert "option-click" in calls
 
 
 def test_resolve_locator_skips_hidden_text_matches() -> None:

@@ -87,3 +87,47 @@ def test_analyze_frames_reports_batch_progress() -> None:
         glm_client_module.post_chat_completion = original_post_chat_completion
 
     assert progress_events == [(1, 2), (2, 2)]
+
+
+def test_analyze_frames_disables_glm_thinking_for_json_output(monkeypatch) -> None:
+    monkeypatch.delenv("VLM_GLM_THINKING", raising=False)
+    config = SimpleNamespace(
+        glm_base_url="https://open.bigmodel.cn/api/paas/v4",
+        glm_model="glm-5v-turbo",
+        glm_api_key="secret",
+    )
+    client = glm_client_module.GLMClient(config, timeout_seconds=1)
+    captured_payload: dict = {}
+
+    class FakeResponse:
+        def json(self) -> dict:
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": '{"session_summary":"","observed_actions":[],"uncertainties":[]}',
+                        }
+                    }
+                ]
+            }
+
+    def fake_post_chat_completion(*args, **kwargs):
+        captured_payload.update(kwargs["payload"])
+        return FakeResponse()
+
+    original_post_chat_completion = glm_client_module.post_chat_completion
+    glm_client_module.post_chat_completion = fake_post_chat_completion
+
+    try:
+        with TemporaryDirectory() as temp_dir:
+            frame_path = Path(temp_dir) / "frame.png"
+            frame_path.write_bytes(b"frame")
+            client.analyze_frames(frame_paths=[frame_path], site_url="https://example.com")
+    finally:
+        glm_client_module.post_chat_completion = original_post_chat_completion
+
+    assert captured_payload["model"] == "glm-5v-turbo"
+    assert captured_payload["thinking"] == {"type": "disabled"}
+    image_part = captured_payload["messages"][1]["content"][1]
+    assert image_part["image_url"]["url"] == "ZnJhbWU="
+    assert not image_part["image_url"]["url"].startswith("data:image/")

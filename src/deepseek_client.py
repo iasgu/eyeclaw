@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from typing import Any
 
 import requests
@@ -46,6 +47,8 @@ class DeepSeekClient:
                 },
             ],
         }
+        if _is_glm_model_or_endpoint(self._config.deepseek_model, self._config.deepseek_base_url):
+            payload["thinking"] = {"type": os.getenv("LLM_GLM_THINKING", "disabled")}
         try:
             response = requests.post(
                 self.endpoint,
@@ -62,6 +65,12 @@ class DeepSeekClient:
         response_json = response.json()
         content_text = response_json["choices"][0]["message"]["content"]
         return json.loads(content_text)
+
+
+def _is_glm_model_or_endpoint(model: str, base_url: str) -> bool:
+    normalized_model = str(model or "").strip().lower()
+    normalized_base_url = str(base_url or "").strip().lower()
+    return normalized_model.startswith("glm") or "bigmodel.cn" in normalized_base_url or "zhipu" in normalized_base_url
 
 
 def raise_for_status_with_detail(response: Response, provider: str) -> None:

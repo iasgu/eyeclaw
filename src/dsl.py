@@ -5,7 +5,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-SupportedAction = Literal["open", "click", "type", "select", "wait", "scroll"]
+SupportedAction = Literal["open", "click", "type", "select", "wait", "scroll", "press"]
 
 
 def normalize_action_name(value: str) -> str:
@@ -20,6 +20,13 @@ def normalize_action_name(value: str) -> str:
         "choose": "select",
         "pick": "select",
         "pause": "wait",
+        "key": "press",
+        "keyboard": "press",
+        "keypress": "press",
+        "press-key": "press",
+        "shortcut": "press",
+        "hotkey": "press",
+        "keyboard-shortcut": "press",
     }
     return aliases.get(normalized, normalized)
 
@@ -55,8 +62,8 @@ class ReplayStep(BaseModel):
     @classmethod
     def ensure_required_target(cls, value: str, info) -> str:
         action = info.data.get("action")
-        if action in {"click", "type", "select"} and not value.strip():
-            raise ValueError("target is required for click, type, and select actions")
+        if action in {"click", "type", "select", "press"} and not value.strip():
+            raise ValueError("target is required for click, type, select, and press actions")
         return value.strip()
 
 

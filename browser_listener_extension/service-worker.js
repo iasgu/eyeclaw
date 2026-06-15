@@ -15,10 +15,13 @@ const SCREENSHOT_EVENT_TYPES = new Set([
   "history",
   "page_loaded",
   "click",
+  "keyboard_shortcut",
   "change",
   "scroll"
 ]);
 const MIN_SCREENSHOT_INTERVAL_MS = 1200;
+const OFFSCREEN_MESSAGE_ATTEMPTS = 8;
+const OFFSCREEN_MESSAGE_RETRY_MS = 150;
 const queue = [];
 const lastScreenshotAtByTab = new Map();
 
@@ -92,20 +95,51 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isMissingReceiverError(error) {
+  const text = String(error?.message || error || "");
+  return text.includes("Could not establish connection") || text.includes("Receiving end does not exist");
+}
+
+async function sendOffscreenMessage(message, attempts = OFFSCREEN_MESSAGE_ATTEMPTS) {
+  let lastError = null;
+  for (let index = 0; index < attempts; index += 1) {
+    try {
+      return await chrome.runtime.sendMessage({
+        target: "offscreen",
+        ...message
+      });
+    } catch (error) {
+      lastError = error;
+      if (!isMissingReceiverError(error) || index === attempts - 1) {
+        throw error;
+      }
+      await sleep(OFFSCREEN_MESSAGE_RETRY_MS);
+    }
+  }
+  throw lastError || new Error("Unable to contact offscreen recorder.");
+}
+
+async function waitForOffscreenDocumentReady() {
+  const response = await sendOffscreenMessage({ type: "ping" });
+  if (!response || !response.ok) {
+    throw new Error("Offscreen recorder did not become ready.");
+  }
+}
+
 async function ensureOffscreenDocument() {
   const offscreenUrl = chrome.runtime.getURL("offscreen.html");
   const existingContexts = await chrome.runtime.getContexts({
     contextTypes: ["OFFSCREEN_DOCUMENT"],
     documentUrls: [offscreenUrl]
   });
-  if (existingContexts.length > 0) {
-    return;
+  if (existingContexts.length === 0) {
+    await chrome.offscreen.createDocument({
+      url: "offscreen.html",
+      reasons: ["USER_MEDIA"],
+      justification: "Record the current browser tab for session-based workflow analysis."
+    });
   }
-  await chrome.offscreen.createDocument({
-    url: "offscreen.html",
-    reasons: ["USER_MEDIA"],
-    justification: "Record the current browser tab for session-based workflow analysis."
-  });
+  await waitForOffscreenDocumentReady();
 }
 
 async function getActiveTab() {
@@ -149,8 +183,7 @@ async function startRecordingForTab(tab, settings) {
   const streamId = await chrome.tabCapture.getMediaStreamId({
     targetTabId: tab.id
   });
-  const response = await chrome.runtime.sendMessage({
-    target: "offscreen",
+  const response = await sendOffscreenMessage({
     type: "start-recording",
     streamId,
     sessionId: settings.sessionId,
@@ -211,13 +244,22 @@ async function maybeStartPendingRecordingForTab(tab) {
   }
 }
 
-async function stopRecordingIfActive() {
+async function stopRecordingIfActive(settingsOverride = null) {
   pendingRecordingSettings = null;
-  if (!activeRecordingSessionId) {
-    return;
+  const settings = settingsOverride || await getSettings();
+  const storedState = settings.recordingState || "idle";
+  if (!activeRecordingSessionId && storedState !== "recording") {
+    await saveSettings({
+      recordingState: "idle",
+      recordingTabId: null
+    });
+    return {
+      stopped: false,
+      skipped: true,
+      reason: storedState === "pending" ? "recording-never-started" : "no-active-recording"
+    };
   }
-  const response = await chrome.runtime.sendMessage({
-    target: "offscreen",
+  const response = await sendOffscreenMessage({
     type: "stop-recording"
   });
   if (!response || !response.ok) {
@@ -228,13 +270,19 @@ async function stopRecordingIfActive() {
     recordingState: "idle",
     recordingTabId: null
   });
+  return {
+    stopped: true,
+    skipped: Boolean(response.result?.skipped),
+    reason: response.result?.reason || null,
+    upload: response.result?.upload || null
+  };
 }
 
 function inferKeyCandidate(event) {
   if (typeof event.key_candidate === "boolean") {
     return event.key_candidate;
   }
-  if (["navigation", "history", "tab_activated", "tab_updated", "page_loaded", "click", "change"].includes(event.event_type)) {
+  if (["navigation", "history", "tab_activated", "tab_updated", "page_loaded", "click", "keyboard_shortcut", "change"].includes(event.event_type)) {
     return true;
   }
   if (event.event_type === "input") {
@@ -266,7 +314,7 @@ function screenshotDelayMs(eventType) {
   if (eventType === "tab_updated" || eventType === "history" || eventType === "page_loaded") {
     return 500;
   }
-  if (eventType === "click" || eventType === "change") {
+  if (eventType === "click" || eventType === "keyboard_shortcut" || eventType === "change") {
     return 180;
   }
   if (eventType === "scroll") {
@@ -444,7 +492,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         apiBase: nextApiBase,
         clientName: nextClientName
       });
-      await stopRecordingIfActive();
+      const recordingResult = await stopRecordingIfActive(currentSettings);
       await saveSettings({
         apiBase: nextApiBase,
         clientName: nextClientName,
@@ -455,7 +503,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         recordingTabId: null
       });
       const settings = await getSettings();
-      sendResponse({ ok: true, settings });
+      sendResponse({ ok: true, settings, recording_result: recordingResult });
     })().catch((error) => sendResponse({ ok: false, error: String(error) }));
     return true;
   }
@@ -469,7 +517,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         apiBase: nextApiBase,
         clientName: nextClientName
       });
-      await stopRecordingIfActive();
+      const recordingResult = await stopRecordingIfActive(currentSettings);
       await saveSettings({
         apiBase: nextApiBase,
         clientName: nextClientName,
@@ -480,7 +528,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         recordingTabId: null
       });
       const settings = await getSettings();
-      sendResponse({ ok: true, settings });
+      sendResponse({ ok: true, settings, recording_result: recordingResult });
     })().catch((error) => sendResponse({ ok: false, error: String(error) }));
     return true;
   }

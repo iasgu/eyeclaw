@@ -8,6 +8,7 @@ from src.browser_listener import (
     _events_are_redundant,
     plan_listener_guided_frames,
     save_session_recording,
+    summarize_browser_event,
 )
 
 
@@ -39,6 +40,30 @@ def test_browser_listener_store_marks_navigation_and_large_scroll_as_key_candida
     assert accepted[0].is_key_candidate is True
     assert accepted[1].is_key_candidate is True
     assert accepted[2].is_key_candidate is False
+
+
+def test_browser_listener_store_accepts_keyboard_shortcut_events(tmp_path) -> None:
+    store = BrowserEventStore(max_events=10, artifact_root=tmp_path)
+    batch = BrowserEventBatchIn.model_validate(
+        {
+            "client_name": "listener",
+            "session_id": "shortcut-session",
+            "events": [
+                {
+                    "event_type": "keyboard_shortcut",
+                    "target_text": "Ctrl+S",
+                    "input_value": "Ctrl+S",
+                    "details": {"shortcut": "Ctrl+S"},
+                    "page_url": "https://example.com/report.pdf",
+                }
+            ],
+        }
+    )
+
+    accepted = store.ingest(batch)
+
+    assert accepted[0].is_key_candidate is True
+    assert "target=Ctrl+S" in summarize_browser_event(accepted[0])
 
 
 def test_browser_listener_store_returns_newest_events_first() -> None:

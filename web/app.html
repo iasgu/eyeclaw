@@ -38,7 +38,7 @@
       }
 
       .page {
-        max-width: 1280px;
+        max-width: 1440px;
         margin: 0 auto;
         padding: 28px 20px 56px;
       }
@@ -225,6 +225,258 @@
         align-items: start;
       }
 
+      .flow-strip {
+        margin-bottom: 18px;
+        padding: 18px;
+      }
+
+      .flow-strip-head,
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: flex-start;
+        margin-bottom: 14px;
+      }
+
+      .flow-steps {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .flow-step {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fbfdff;
+        padding: 13px;
+        min-width: 0;
+      }
+
+      .flow-step strong {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 14px;
+      }
+
+      .flow-step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        margin-right: 6px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .recording-dashboard {
+        display: grid;
+        grid-template-columns: minmax(0, 1.32fr) minmax(340px, 0.68fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .record-status-card {
+        position: sticky;
+        top: 18px;
+      }
+
+      .record-method-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.82fr);
+        gap: 12px;
+        align-items: stretch;
+      }
+
+      .record-method {
+        display: grid;
+        gap: 12px;
+        align-content: start;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 14px;
+        background: #fbfdff;
+        min-width: 0;
+      }
+
+      .record-method.primary-method {
+        border-color: rgba(35, 105, 233, 0.3);
+        background: linear-gradient(135deg, #ffffff 0%, #f1f7ff 100%);
+      }
+
+      .record-method-title {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .record-primary-actions button {
+        min-width: 128px;
+      }
+
+      .record-secondary-actions button {
+        min-width: 112px;
+      }
+
+      .recording-output-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 18px;
+        align-items: start;
+        margin-top: 18px;
+      }
+
+      .steps-card .stack {
+        max-height: 520px;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .analysis-progress-block {
+        margin-bottom: 12px;
+      }
+
+      .analysis-progress-block h3 {
+        margin: 0 0 10px;
+        font-size: 15px;
+      }
+
+      .step-save-actions {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px dashed var(--line);
+      }
+
+      .recording-list-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+        gap: 12px;
+        overflow: visible;
+      }
+
+      .recording-list-grid .empty {
+        grid-column: 1 / -1;
+      }
+
+      .execution-monitor {
+        display: grid;
+        gap: 16px;
+        align-self: start;
+        margin-bottom: 0;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(245, 250, 255, 0.92)),
+          #fff;
+        box-shadow: 0 18px 46px rgba(25, 68, 121, 0.1);
+      }
+
+      .execution-monitor-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(220px, auto);
+        gap: 16px;
+        align-items: start;
+      }
+
+      .monitor-eyebrow {
+        margin-bottom: 5px;
+        color: var(--accent-strong);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .monitor-stage-box {
+        justify-self: end;
+        min-width: 220px;
+        border: 1px solid #d9e8f7;
+        border-radius: 16px;
+        padding: 12px 14px;
+        background: #fbfdff;
+      }
+
+      .monitor-stage-box span {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .monitor-stage-box strong {
+        display: block;
+        color: var(--text);
+        font-size: 15px;
+        word-break: break-word;
+      }
+
+      .monitor-meter {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr);
+        gap: 16px;
+        align-items: center;
+        padding: 14px;
+        border: 1px solid #d9e8f7;
+        border-radius: 18px;
+        background: #fbfdff;
+      }
+
+      .monitor-percent {
+        color: var(--accent-strong);
+        font-size: 34px;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      .monitor-percent.is-status {
+        font-size: 27px;
+        white-space: nowrap;
+      }
+
+      .monitor-meter-copy {
+        margin-top: 8px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .monitor-section {
+        display: grid;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .monitor-section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .monitor-section-head h3 {
+        margin: 0;
+      }
+
+      .monitor-section-caption {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .task-workbench-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+
       .card {
         padding: 20px;
         min-width: 0;
@@ -232,6 +484,35 @@
 
       .library-card {
         margin-top: 18px;
+      }
+
+      .task-manager-card {
+        align-self: start;
+      }
+
+      .task-list-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        max-height: min(720px, 68vh);
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .task-list-grid .empty {
+        grid-column: 1 / -1;
+      }
+
+      .task-list-grid .task-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .task-card-main,
+      .task-visual-pane {
+        min-width: 0;
       }
 
       .library-header {
@@ -390,6 +671,352 @@
         background: #fff4f4;
       }
 
+      .result-line {
+        display: grid;
+        grid-template-columns: 74px minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .result-line-label {
+        color: var(--text);
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .result-line-value {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .result-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .result-chip {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: #edf4fb;
+        color: #315b7e;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .task-board-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 10px;
+      }
+
+      .task-summary {
+        margin-top: 4px;
+      }
+
+      .task-card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: flex-start;
+        margin-bottom: 6px;
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+        border-radius: 999px;
+        padding: 5px 9px;
+        font-size: 12px;
+        font-weight: 800;
+        background: #edf4fb;
+        color: var(--muted);
+      }
+
+      .status-chip.running,
+      .status-chip.queued,
+      .status-chip.cancelling {
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+      }
+
+      .status-chip.completed {
+        background: var(--success-soft);
+        color: var(--success);
+      }
+
+      .status-chip.failed,
+      .status-chip.cancelled {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .status-chip.manual {
+        background: var(--warn-soft);
+        color: var(--warn);
+      }
+
+      .task-item.active-task {
+        border-color: rgba(35, 105, 233, 0.38);
+        background: #f8fbff;
+      }
+
+      .task-mini-progress {
+        height: 8px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e6eef8;
+        margin: 10px 0 8px;
+      }
+
+      .task-mini-progress-bar {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #2b78f2 0%, #66a1ff 100%);
+      }
+
+      .task-mini-progress-bar.indeterminate,
+      .progress-bar.indeterminate {
+        width: 38% !important;
+        animation: progress-indeterminate 1.15s ease-in-out infinite;
+      }
+
+      .task-card-meta-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .task-card-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .task-card-field {
+        min-width: 0;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: #f3f8fd;
+      }
+
+      .task-card-field span {
+        display: block;
+        margin-bottom: 2px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .task-card-field strong {
+        display: block;
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+      }
+
+      .task-objective,
+      .task-event,
+      .task-error {
+        margin-top: 10px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .task-objective {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+      }
+
+      .task-error {
+        max-height: 96px;
+        overflow: auto;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .deliverable-block {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed var(--line);
+      }
+
+      .task-deliverables {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .deliverable-link {
+        max-width: 100%;
+        text-decoration: none;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .benchmark-block {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed var(--line);
+        display: grid;
+        gap: 8px;
+      }
+
+      .benchmark-row {
+        display: grid;
+        grid-template-columns: minmax(120px, 1.2fr) repeat(3, minmax(72px, 0.6fr));
+        gap: 8px;
+        align-items: center;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: #f3f8fd;
+        font-size: 12px;
+      }
+
+      .benchmark-row strong {
+        overflow-wrap: anywhere;
+      }
+
+      .benchmark-value {
+        color: var(--muted);
+        font-weight: 800;
+      }
+
+      .benchmark-value.success {
+        color: var(--success);
+      }
+
+      .benchmark-value.fail {
+        color: var(--danger);
+      }
+
+      .task-visual-pane {
+        display: grid;
+        grid-template-rows: auto minmax(170px, 1fr) auto;
+        border: 1px solid #d9e8f7;
+        border-radius: 16px;
+        background: #f8fbff;
+        overflow: hidden;
+      }
+
+      .visual-window-bar {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        padding: 10px 12px;
+        border-bottom: 1px solid #d9e8f7;
+        background: #ffffff;
+      }
+
+      .visual-window-dots {
+        display: inline-flex;
+        gap: 5px;
+      }
+
+      .visual-window-dots span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #c5d6e8;
+      }
+
+      .visual-window-title {
+        min-width: 0;
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 800;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .visual-screen {
+        position: relative;
+        display: grid;
+        place-items: center;
+        min-height: 178px;
+        background:
+          linear-gradient(135deg, rgba(35, 105, 233, 0.08), transparent 40%),
+          #edf4fb;
+      }
+
+      .task-preview-image {
+        width: 100%;
+        height: 100%;
+        min-height: 178px;
+        object-fit: contain;
+        background: #fff;
+      }
+
+      .task-preview-image.is-hidden {
+        display: none;
+      }
+
+      .visual-placeholder {
+        padding: 18px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .visual-meta {
+        display: grid;
+        gap: 6px;
+        padding: 10px 12px 12px;
+        border-top: 1px solid #d9e8f7;
+        background: #fbfdff;
+      }
+
+      .visual-url {
+        min-width: 0;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .task-event-list {
+        display: grid;
+        gap: 6px;
+        max-height: 116px;
+        overflow: auto;
+        padding-right: 2px;
+      }
+
+      .task-event-row {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
       .empty {
         border: 1px dashed var(--line);
         border-radius: 16px;
@@ -443,6 +1070,15 @@
         }
         to {
           transform: translateX(60%);
+        }
+      }
+
+      @keyframes progress-indeterminate {
+        from {
+          transform: translateX(-120%);
+        }
+        to {
+          transform: translateX(265%);
         }
       }
 
@@ -526,24 +1162,14 @@
         -webkit-line-clamp: 2;
       }
 
-      .log-box {
-        margin: 0;
-        padding: 14px;
-        border-radius: 16px;
-        background: #0f1724;
-        color: #edf2fb;
-        font-size: 12px;
-        line-height: 1.7;
-        white-space: pre-wrap;
-        word-break: break-word;
-        min-height: 120px;
-        overflow-wrap: anywhere;
+      .task-builder-card .task-skill-grid {
+        max-height: 360px;
       }
 
       .recording-card video {
         display: block;
         width: 100%;
-        max-height: 220px;
+        max-height: 210px;
         margin-top: 10px;
         border-radius: 14px;
         background: #0f1724;
@@ -578,9 +1204,72 @@
         font-weight: 700;
       }
 
+      @media (min-width: 981px) {
+        .panel {
+          padding: 18px;
+        }
+
+        .recording-output-grid {
+          grid-template-columns: minmax(0, 0.88fr) minmax(420px, 1.12fr);
+          align-items: stretch;
+        }
+
+        .steps-card,
+        .recordings-card,
+        .library-card {
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+          max-height: 560px;
+        }
+
+        .steps-card .section-head,
+        .recordings-card .section-head,
+        .library-card .library-header {
+          flex: 0 0 auto;
+        }
+
+        .steps-card .stack,
+        .recordings-card .recording-list-grid,
+        .library-card .skill-board {
+          flex: 1 1 auto;
+          min-height: 0;
+          max-height: none;
+          overflow: auto;
+          padding-right: 4px;
+        }
+
+        .recordings-card .recording-list-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .recording-card video {
+          max-height: 160px;
+        }
+
+        .task-builder-card .task-skill-grid {
+          max-height: 330px;
+        }
+
+        .task-list-grid {
+          max-height: min(760px, 70vh);
+        }
+      }
+
+      @media (min-width: 1280px) {
+        .task-builder-card .task-skill-grid {
+          max-height: 390px;
+        }
+      }
+
       @media (max-width: 980px) {
         .hero-top,
         .grid-two,
+        .recording-dashboard,
+        .record-method-grid,
+        .recording-output-grid,
+        .execution-monitor-head,
+        .task-workbench-grid,
         .library-tools,
         .row,
         .row.three {
@@ -588,8 +1277,73 @@
           flex-direction: column;
         }
 
+        .record-status-card {
+          position: static;
+        }
+
+        .monitor-stage-box {
+          justify-self: stretch;
+          min-width: 0;
+        }
+
+        .flow-steps {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .recording-list-grid {
+          grid-template-columns: 1fr;
+          max-height: none;
+        }
+
+        .task-card-fields {
+          grid-template-columns: 1fr;
+        }
+
+        .task-list-grid {
+          grid-template-columns: 1fr;
+          max-height: none;
+        }
+
+        .task-list-grid .task-item {
+          grid-template-columns: 1fr;
+        }
+
         .badge-row {
           justify-content: flex-start;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .flow-steps {
+          grid-template-columns: 1fr;
+        }
+
+        .flow-strip-head,
+        .section-head,
+        .monitor-section-head,
+        .library-header,
+        .task-board-head {
+          flex-direction: column;
+        }
+
+        .execution-monitor {
+          padding: 16px;
+        }
+
+        .monitor-meter {
+          grid-template-columns: 1fr;
+        }
+
+        .monitor-percent {
+          font-size: 30px;
+        }
+
+        .result-line {
+          grid-template-columns: 1fr;
+        }
+
+        .monitor-meter-copy {
+          flex-direction: column;
         }
       }
     </style>
@@ -616,26 +1370,26 @@
         </div>
       </section>
 
-      <section class="card" style="margin-bottom: 18px">
-        <div class="task-skill-header" style="margin-bottom: 12px">
+      <section class="card quick-guide-card flow-strip" id="quickGuideSection">
+        <div class="flow-strip-head">
           <h2 style="margin: 0">新手建议流程</h2>
           <span class="mini-pill">照着做就行</span>
         </div>
-        <div class="task-skill-grid" style="max-height: none">
-          <div class="task-item">
-            <strong class="task-title">1. 安装扩展并打开目标网站</strong>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <strong><span class="flow-step-number">1</span>准备目标网站</strong>
             <div class="meta">先确认右上角显示“已连接扩展”，再去目标网页准备操作。</div>
           </div>
-          <div class="task-item">
-            <strong class="task-title">2. 点击“开始演示”</strong>
+          <div class="flow-step">
+            <strong><span class="flow-step-number">2</span>开始演示</strong>
             <div class="meta">系统会同步开始监听和录屏。接下来按你平时的真实操作走一遍。</div>
           </div>
-          <div class="task-item">
-            <strong class="task-title">3. 停止后分析并保存技能</strong>
+          <div class="flow-step">
+            <strong><span class="flow-step-number">3</span>分析并保存</strong>
             <div class="meta">系统会结合监听时间轴和截图生成步骤，确认后保存成技能。</div>
           </div>
-          <div class="task-item">
-            <strong class="task-title">4. 选择技能并自动执行</strong>
+          <div class="flow-step">
+            <strong><span class="flow-step-number">4</span>复用执行</strong>
             <div class="meta">去第二步页面，勾选技能，点击“立刻执行”，看进度条和日志即可。</div>
           </div>
         </div>
@@ -643,49 +1397,48 @@
 
       <div class="workspace">
         <section class="panel active" id="skillsPanel">
-          <div class="grid-two skill-layout">
+          <div class="recording-dashboard">
             <div class="card">
-              <h2>先把流程录下来</h2>
-              <p>推荐你直接点击“开始演示”，去目标网站实际操作一遍。不会写流程图也没关系，系统会根据你的演示自动整理步骤。</p>
+              <div class="section-head">
+                <div>
+                  <h2>录制操作台</h2>
+                  <p>选择“现场演示”或“已有视频”，分析后系统会根据视频和监听记录自动命名、生成说明。</p>
+                </div>
+                <span class="mini-pill">自动命名</span>
+              </div>
 
               <div class="form-grid">
-                <div class="row">
-                  <div>
-                    <label for="skillName">给这个技能起个名字</label>
-                    <input id="skillName" type="text" placeholder="例如：下载土地公告 PDF" />
+                <div class="record-method-grid">
+                  <div class="record-method primary-method">
+                    <div>
+                      <span class="record-method-title">现场演示</span>
+                      <div class="meta">开始后切到目标网站正常操作，完成后回到这里停止并分析。</div>
+                    </div>
+                    <div class="actions record-primary-actions">
+                      <button class="secondary" id="startDemoBtn">开始演示</button>
+                      <button class="warn-btn" id="stopDemoBtn">停止演示</button>
+                      <button class="primary" id="analyzeDemoBtn">分析演示过程</button>
+                    </div>
                   </div>
-                  <div>
-                    <label for="skillDescription">一句话说明它能做什么</label>
-                    <input id="skillDescription" type="text" placeholder="例如：按地区筛选公告并打开详情页" />
-                  </div>
-                </div>
 
-                <div>
-                  <label for="skillRequest">你想让系统学会什么</label>
-                  <textarea
-                    id="skillRequest"
-                    placeholder="例如：打开中国土地市场网，进入出让公告，筛选浙江省杭州市，打开详情页并保存结果。"
-                  ></textarea>
-                </div>
-
-                <div class="row">
-                  <div>
-                    <label for="videoInput">如果你已经录好了视频，也可以直接上传</label>
-                    <input id="videoInput" type="file" accept="video/mp4,video/webm" />
+                  <div class="record-method">
+                    <div>
+                      <span class="record-method-title">已有视频</span>
+                      <div class="meta">已经录好的 MP4 或 WebM 可以直接上传后分析。</div>
+                    </div>
+                    <div>
+                      <label for="videoInput">上传视频</label>
+                      <input id="videoInput" type="file" accept="video/mp4,video/webm" />
+                    </div>
+                    <div>
+                      <label for="videoPath">当前选中的视频路径</label>
+                      <input id="videoPath" type="text" placeholder="上传后会自动填写，也可以手动粘贴已有视频路径" />
+                    </div>
+                    <div class="actions record-secondary-actions">
+                      <button class="secondary" id="uploadBtn">上传视频</button>
+                      <button class="primary" id="analyzeVideoBtn">分析视频</button>
+                    </div>
                   </div>
-                  <div>
-                    <label for="videoPath">当前选中的视频路径</label>
-                    <input id="videoPath" type="text" placeholder="上传后会自动填写，也可以手动粘贴已有视频路径" />
-                  </div>
-                </div>
-
-                <div class="actions">
-                  <button class="secondary" id="uploadBtn">上传视频</button>
-                  <button class="primary" id="analyzeVideoBtn">分析视频</button>
-                  <button class="secondary" id="startDemoBtn">开始演示</button>
-                  <button class="warn-btn" id="stopDemoBtn">停止演示</button>
-                  <button class="primary" id="analyzeDemoBtn">分析演示过程</button>
-                  <button class="primary" id="saveSkillBtn">保存技能</button>
                 </div>
 
                 <div class="hint warn" id="demoHint">
@@ -694,31 +1447,48 @@
               </div>
             </div>
 
-            <div class="card">
-              <h2>我现在进行到哪一步了？</h2>
-              <div class="stack" id="listenerStatusBox"></div>
-
-              <div style="margin-top: 18px">
-                <h3>步骤整理进度</h3>
-                <div class="status-item">
-                  <div class="progress">
-                    <div class="progress-bar" id="analysisProgressBar"></div>
-                  </div>
-                  <div class="progress-meta">
-                    <span id="analysisStage">等待开始</span>
-                    <span id="analysisPercent">0%</span>
-                  </div>
+            <div class="card record-status-card">
+              <div class="section-head">
+                <div>
+                  <h2>当前会话</h2>
+                  <p>这里显示扩展连接、监听、录屏和会话状态。</p>
                 </div>
               </div>
+              <div class="stack" id="listenerStatusBox"></div>
+            </div>
+          </div>
 
-              <div style="margin-top: 18px">
-                <h3>系统整理出的步骤</h3>
-                <div class="stack" id="stepList"></div>
+          <div class="recording-output-grid">
+            <div class="card recordings-card">
+              <div class="section-head">
+                <div>
+                  <h2>可继续分析的录制视频</h2>
+                  <p>最近录制的视频会保留在这里，可重新选择并分析。</p>
+                </div>
               </div>
+              <div class="recording-list-grid" id="recordingList"></div>
+            </div>
 
-              <div style="margin-top: 18px">
-                <h3>可继续分析的录制视频</h3>
-                <div class="stack" id="recordingList"></div>
+            <div class="card steps-card">
+              <div class="section-head">
+                <div>
+                  <h2>系统整理出的步骤</h2>
+                  <p>分析完成后先检查步骤是否符合你的真实意图，再保存成技能。</p>
+                </div>
+              </div>
+              <div class="status-item analysis-progress-block">
+                <h3>步骤整理进度</h3>
+                <div class="progress">
+                  <div class="progress-bar" id="analysisProgressBar"></div>
+                </div>
+                <div class="progress-meta">
+                  <span id="analysisStage">等待开始</span>
+                  <span id="analysisPercent">0%</span>
+                </div>
+              </div>
+              <div class="stack" id="stepList"></div>
+              <div class="actions step-save-actions">
+                <button class="primary" id="saveSkillBtn">保存技能</button>
               </div>
             </div>
           </div>
@@ -740,8 +1510,8 @@
         </section>
 
         <section class="panel" id="tasksPanel">
-          <div class="grid-two">
-            <div class="card">
+          <div class="task-workbench-grid">
+            <div class="card task-builder-card">
               <h2>让技能帮你自动操作</h2>
               <p>先检查下面 3 项：浏览器调试地址是否可用、执行模式是否正确、需要的技能是否已勾选。准备好后再点击“立刻执行”。</p>
 
@@ -767,9 +1537,10 @@
                   <div>
                     <label for="taskExecutionMode">执行方式</label>
                     <select id="taskExecutionMode">
-                      <option value="browser_use_live_workflow" selected>Browser Use 智能执行（推荐）</option>
-                      <option value="generic_live_workflow">传统 CDP 回放（备用）</option>
+                      <option value="browser_use_live_workflow" selected>Browser Use（推荐）</option>
+                      <option value="generic_live_workflow">CDP 回放（备用）</option>
                     </select>
+                    <div class="meta" id="executionModeHint">Browser Use 会先尝试快速回放，再按需进入智能执行。</div>
                   </div>
                   <div>
                     <label for="taskFrequency">什么时候执行</label>
@@ -799,33 +1570,46 @@
 
                 <div class="actions">
                   <button class="primary" id="runNowBtn">立刻执行</button>
+                  <button class="secondary" id="benchmarkTaskBtn">对比测试</button>
+                  <button class="warn-btn" id="stopTaskBtn" disabled>停止任务</button>
                   <button class="secondary" id="saveTaskBtn">保存任务</button>
-                  <button class="secondary" id="refreshTasksBtn">刷新任务列表</button>
+                  <button class="secondary" id="refreshTasksBtn">刷新看板</button>
                 </div>
               </div>
             </div>
 
-            <div class="card">
-              <h2>执行进度与结果</h2>
-              <div class="status-item" style="margin-bottom: 14px">
-                <div class="progress">
-                  <div class="progress-bar" id="taskProgressBar"></div>
+            <div class="execution-monitor">
+              <div class="execution-monitor-head">
+                <div>
+                  <div class="monitor-eyebrow">任务运行看板</div>
+                  <h2>任务队列和可视化执行状态</h2>
+                  <div class="meta task-summary" id="taskQueueSummary">最多同时执行 3 个任务，超出会自动排队。</div>
                 </div>
-                <div class="progress-meta">
-                  <span id="taskStage">等待执行</span>
-                  <span id="taskPercent">0%</span>
+                <div class="monitor-stage-box">
+                  <span>当前阶段</span>
+                  <strong id="taskStage">等待执行</strong>
                 </div>
               </div>
-              <div class="stack" id="resultList"></div>
 
-              <div style="margin-top: 18px">
-                <h3>系统正在做什么</h3>
-                <pre class="log-box" id="runLogs">任务开始后，这里会持续显示系统正在做什么。</pre>
+              <div class="monitor-meter">
+                <div class="monitor-percent" id="taskPercent">0%</div>
+                <div>
+                  <div class="progress">
+                    <div class="progress-bar" id="taskProgressBar"></div>
+                  </div>
+                  <div class="monitor-meter-copy">
+                    <span id="taskProgressLabel">当前任务进度</span>
+                    <span id="taskRuntimeLabel">等待开始</span>
+                  </div>
+                </div>
               </div>
 
-              <div style="margin-top: 18px">
-                <h3>任务记录</h3>
-                <div class="stack" id="taskList"></div>
+              <div class="monitor-section monitor-queue">
+                <div class="monitor-section-head">
+                  <h3>任务列表</h3>
+                  <button class="secondary tiny-btn" id="refreshTasksBtnTop">刷新</button>
+                </div>
+                <div class="task-list-grid" id="taskList"></div>
               </div>
             </div>
           </div>
@@ -850,6 +1634,9 @@
         localRecording: null,
         runningTaskId: "",
         refreshTimer: null,
+        taskTelemetry: null,
+        executionAdapters: [],
+        defaultExecutionTaskType: "browser_use_live_workflow",
       };
 
       const els = {
@@ -857,9 +1644,7 @@
         extensionBadge: document.getElementById("extensionBadge"),
         tabs: document.querySelectorAll("[data-panel]"),
         panels: document.querySelectorAll(".panel"),
-        skillName: document.getElementById("skillName"),
-        skillDescription: document.getElementById("skillDescription"),
-        skillRequest: document.getElementById("skillRequest"),
+        quickGuideSection: document.getElementById("quickGuideSection"),
         videoInput: document.getElementById("videoInput"),
         videoPath: document.getElementById("videoPath"),
         uploadBtn: document.getElementById("uploadBtn"),
@@ -882,10 +1667,13 @@
         taskProgressBar: document.getElementById("taskProgressBar"),
         taskStage: document.getElementById("taskStage"),
         taskPercent: document.getElementById("taskPercent"),
+        taskProgressLabel: document.getElementById("taskProgressLabel"),
+        taskRuntimeLabel: document.getElementById("taskRuntimeLabel"),
         taskName: document.getElementById("taskName"),
         taskObjective: document.getElementById("taskObjective"),
         taskCdpUrl: document.getElementById("taskCdpUrl"),
         taskExecutionMode: document.getElementById("taskExecutionMode"),
+        executionModeHint: document.getElementById("executionModeHint"),
         taskFrequency: document.getElementById("taskFrequency"),
         taskRunAt: document.getElementById("taskRunAt"),
         taskRunAtWrap: document.getElementById("taskRunAtWrap"),
@@ -893,12 +1681,19 @@
         taskSkillCount: document.getElementById("taskSkillCount"),
         skillOptions: document.getElementById("skillOptions"),
         runNowBtn: document.getElementById("runNowBtn"),
+        benchmarkTaskBtn: document.getElementById("benchmarkTaskBtn"),
+        stopTaskBtn: document.getElementById("stopTaskBtn"),
         saveTaskBtn: document.getElementById("saveTaskBtn"),
         refreshTasksBtn: document.getElementById("refreshTasksBtn"),
+        refreshTasksBtnTop: document.getElementById("refreshTasksBtnTop"),
         resultList: document.getElementById("resultList"),
-        runLogs: document.getElementById("runLogs"),
         taskList: document.getElementById("taskList"),
+        taskQueueSummary: document.getElementById("taskQueueSummary"),
       };
+
+      function elementValue(element, fallback = "") {
+        return element && "value" in element ? String(element.value || "") : fallback;
+      }
 
       function setBadge(el, text, tone) {
         el.textContent = text;
@@ -907,38 +1702,419 @@
 
       function setAnalysisProgress(percent, stage, options = {}) {
         const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
-        els.analysisProgressBar.style.width = `${safePercent}%`;
-        els.analysisProgressBar.classList.toggle("estimated", Boolean(options.estimated));
-        els.analysisPercent.textContent = `${safePercent}%`;
-        els.analysisStage.textContent = options.estimated ? `${stage || "处理中"}（估算）` : stage || "处理中";
+        const mode = options.mode || (options.estimated ? "activity" : "determinate");
+        const isActivity = mode === "activity";
+        els.analysisProgressBar.style.width = isActivity ? "38%" : `${safePercent}%`;
+        els.analysisProgressBar.classList.toggle("estimated", false);
+        els.analysisProgressBar.classList.toggle("indeterminate", isActivity);
+        els.analysisPercent.textContent = isActivity
+          ? "处理中"
+          : options.status === "failed"
+            ? "失败"
+            : `${safePercent}%`;
+        els.analysisStage.textContent = stage || (isActivity ? "处理中" : "等待开始");
+      }
+
+      function formatDuration(seconds) {
+        if (seconds === null || seconds === undefined || Number.isNaN(Number(seconds))) {
+          return "";
+        }
+        const total = Math.max(0, Math.floor(Number(seconds)));
+        const minutes = Math.floor(total / 60);
+        const remainingSeconds = total % 60;
+        if (minutes >= 60) {
+          const hours = Math.floor(minutes / 60);
+          const remainingMinutes = minutes % 60;
+          return `${hours}小时${remainingMinutes}分`;
+        }
+        if (minutes > 0) {
+          return `${minutes}分${remainingSeconds}秒`;
+        }
+        return `${remainingSeconds}秒`;
+      }
+
+      function taskProgressOptions(task = {}) {
+        return {
+          mode: task.progress_mode || (task.status === "running" ? "activity" : "determinate"),
+          elapsedSeconds: task.elapsed_seconds,
+          lastEventAgeSeconds: task.last_event_age_seconds,
+          browserRound: task.browser_round,
+          plannedStepCount: task.planned_step_count,
+          estimated: Boolean(task.progress_estimated),
+        };
+      }
+
+      function progressModeLabel(mode) {
+        const normalized = String(mode || "determinate");
+        if (normalized === "activity") {
+          return "真实运行状态";
+        }
+        if (normalized === "queued") {
+          return "排队状态";
+        }
+        return "真实步骤进度";
+      }
+
+      function runtimeSummary(options = {}) {
+        const parts = [];
+        const elapsed = formatDuration(options.elapsedSeconds);
+        const lastEventAge = formatDuration(options.lastEventAgeSeconds);
+        if (elapsed) {
+          parts.push(`已运行 ${elapsed}`);
+        }
+        if (lastEventAge) {
+          parts.push(`最近更新 ${lastEventAge}前`);
+        }
+        if (options.browserRound) {
+          parts.push(`Browser Use ${options.browserRound} 轮`);
+        }
+        return parts.join(" · ") || "等待开始";
+      }
+
+      function formatCompactNumber(value) {
+        const number = Math.max(0, Number(value) || 0);
+        if (number >= 1000000) {
+          return `${(number / 1000000).toFixed(1)}M`;
+        }
+        if (number >= 1000) {
+          return `${(number / 1000).toFixed(1)}k`;
+        }
+        return String(Math.round(number));
+      }
+
+      function formatTokenUsage(usage = {}, task = {}) {
+        const total = Number(usage.total_tokens) || 0;
+        const calls = Number(usage.entry_count) || 0;
+        if (!total && !calls) {
+          return isActiveTaskStatus(task.status) ? "运行后统计" : "未采集";
+        }
+        return `总 ${formatCompactNumber(total)} / 调用 ${calls}`;
+      }
+
+      function rememberTaskTelemetry(options = {}) {
+        state.taskTelemetry = {
+          ...options,
+          capturedAtMs: Date.now(),
+        };
+      }
+
+      function liveTaskTelemetry() {
+        if (!state.taskTelemetry) {
+          return {};
+        }
+        const deltaSeconds = Math.floor((Date.now() - state.taskTelemetry.capturedAtMs) / 1000);
+        const next = { ...state.taskTelemetry };
+        if (next.elapsedSeconds !== null && next.elapsedSeconds !== undefined) {
+          next.elapsedSeconds = Number(next.elapsedSeconds) + deltaSeconds;
+        }
+        if (next.lastEventAgeSeconds !== null && next.lastEventAgeSeconds !== undefined) {
+          next.lastEventAgeSeconds = Number(next.lastEventAgeSeconds) + deltaSeconds;
+        }
+        return next;
+      }
+
+      function updateTaskRuntimeLabel() {
+        if (!els.taskRuntimeLabel) {
+          return;
+        }
+        els.taskRuntimeLabel.textContent = runtimeSummary(liveTaskTelemetry());
       }
 
       function setTaskProgress(percent, stage, options = {}) {
         const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
-        els.taskProgressBar.style.width = `${safePercent}%`;
+        const mode = options.mode || "determinate";
+        const isIndeterminate = ["activity", "queued"].includes(mode);
+        els.taskProgressBar.style.width = isIndeterminate ? "38%" : `${safePercent}%`;
         els.taskProgressBar.classList.toggle("estimated", Boolean(options.estimated));
-        els.taskPercent.textContent = `${safePercent}%`;
-        els.taskStage.textContent = options.estimated ? `${stage || "处理中"}（估算）` : stage || "处理中";
+        els.taskProgressBar.classList.toggle("indeterminate", isIndeterminate);
+        els.taskPercent.textContent = mode === "activity" ? "运行中" : mode === "queued" ? "排队" : `${safePercent}%`;
+        els.taskPercent.classList.toggle("is-status", isIndeterminate);
+        els.taskStage.textContent = stage || "处理中";
+        els.taskProgressLabel.textContent = progressModeLabel(mode);
+        rememberTaskTelemetry(options);
+        updateTaskRuntimeLabel();
+      }
+
+      function isActiveTaskStatus(status) {
+        return ["queued", "running", "cancelling"].includes(String(status || ""));
+      }
+
+      function syncTaskControls(activeTaskId = state.runningTaskId) {
+        const hasActiveTask = Boolean(activeTaskId);
+        els.runNowBtn.disabled = false;
+        els.benchmarkTaskBtn.disabled = false;
+        els.stopTaskBtn.disabled = !hasActiveTask;
+        els.saveTaskBtn.disabled = false;
+      }
+
+      function taskStatusLabel(status) {
+        const labels = {
+          queued: "排队中",
+          running: "执行中",
+          cancelling: "停止中",
+          completed: "已完成",
+          failed: "失败",
+          cancelled: "已取消",
+          manual: "待人工处理",
+          scheduled: "已计划",
+        };
+        return labels[String(status || "")] || String(status || "未知");
+      }
+
+      function taskStatusClass(status) {
+        const normalized = String(status || "");
+        return ["queued", "running", "cancelling", "completed", "failed", "cancelled", "manual", "scheduled"].includes(normalized)
+          ? normalized
+          : "scheduled";
+      }
+
+      function taskSortRank(task) {
+        const ranks = {
+          running: 0,
+          cancelling: 1,
+          queued: 2,
+          manual: 3,
+          scheduled: 4,
+          failed: 5,
+          cancelled: 6,
+          completed: 7,
+        };
+        return ranks[String(task.status || "")] ?? 8;
+      }
+
+      function renderTaskSummary(tasks) {
+        if (!els.taskQueueSummary) {
+          return;
+        }
+        if (!tasks.length) {
+          els.taskQueueSummary.textContent = "最多同时执行 3 个任务，超出会自动排队。";
+          return;
+        }
+        const counts = tasks.reduce((acc, task) => {
+          const key = String(task.status || "unknown");
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {});
+        els.taskQueueSummary.textContent = [
+          `共 ${tasks.length} 个任务`,
+          `执行中 ${counts.running || 0}`,
+          `排队 ${counts.queued || 0}`,
+          `完成 ${counts.completed || 0}`,
+          "最多同时执行 3 个，超出自动排队",
+        ].join(" · ");
+      }
+
+      function renderDeliverableLinks(deliverables) {
+        deliverables = Array.isArray(deliverables) ? deliverables : [];
+        deliverables = deliverables.filter((item) => item && ["file", "link"].includes(String(item.kind || "")));
+        if (!deliverables.length) {
+          return "";
+        }
+        return deliverables
+          .map((item) => {
+            const href = item.url || item.download_url || "";
+            if (!href) {
+              return "";
+            }
+            const label = item.label || item.filename || "交付物";
+            const title = item.kind === "link" ? "打开网页链接" : "下载文件";
+            return `<a class="tiny-btn secondary deliverable-link" href="${escapeHtml(href)}" target="_blank" rel="noopener" title="${title}">${escapeHtml(label)}</a>`;
+          })
+          .filter(Boolean)
+          .join("");
+      }
+
+      function renderTaskDeliverables(task) {
+        const links = renderDeliverableLinks(task.deliverables);
+        if (!links) {
+          return "";
+        }
+        return `
+          <div class="deliverable-block">
+            <div class="task-deliverables">${links}</div>
+          </div>
+        `;
+      }
+
+      function renderTaskBenchmark(task) {
+        const result = task && task.benchmark_result;
+        const adapters = Array.isArray(result?.adapters) ? result.adapters : [];
+        if (!adapters.length) {
+          return "";
+        }
+        const rows = adapters
+          .map((adapter) => {
+            const successRate = Math.round((Number(adapter.success_rate) || 0) * 100);
+            const duration = Number(adapter.avg_duration_seconds) || 0;
+            const progressEvents = Number(adapter.avg_progress_events) || 0;
+            const tone = successRate > 0 ? "success" : "fail";
+            return `
+              <div class="benchmark-row">
+                <strong>${escapeHtml(adapter.label || adapter.task_type || "执行器")}</strong>
+                <span class="benchmark-value ${tone}">${successRate}%</span>
+                <span class="benchmark-value">${duration.toFixed(1)}s</span>
+                <span class="benchmark-value">${progressEvents.toFixed(0)} 条</span>
+              </div>
+            `;
+          })
+          .join("");
+        return `
+          <div class="benchmark-block">
+            <div class="meta">对比结果：成功率 / 平均耗时 / 真实进度事件</div>
+            ${rows}
+          </div>
+        `;
+      }
+
+      function taskFinalUrl(task) {
+        const deliverables = Array.isArray(task.deliverables) ? task.deliverables : [];
+        const link = deliverables.find((item) => item && item.kind === "link" && (item.url || item.download_url));
+        return link ? link.url || link.download_url || "" : "";
+      }
+
+      function taskSiteUrl(task) {
+        return taskFinalUrl(task);
+      }
+
+      function compactTaskEventMessage(message) {
+        const text = String(message || "").trim();
+        if (!text) {
+          return "";
+        }
+        if (text.startsWith("# EyeClaw Browser Use Task")) {
+          return "已生成 Browser Use 执行指令。";
+        }
+        if (text === "Browser Use task:") {
+          return "正在把技能步骤转成浏览器执行指令。";
+        }
+        if (text.length > 180) {
+          return `${text.slice(0, 180)}...`;
+        }
+        return text;
+      }
+
+      function renderTaskEvents(task) {
+        const events = Array.isArray(task.progress_events) ? task.progress_events : [];
+        const visibleEvents = events
+          .map((event) => ({
+            ...event,
+            message: compactTaskEventMessage(event.message || event.event_type || ""),
+          }))
+          .filter((event) => event.message)
+          .slice(-5)
+          .reverse();
+        if (!visibleEvents.length) {
+          return '<div class="task-event-row">等待任务产生状态。</div>';
+        }
+        return visibleEvents
+          .map((event) => `<div class="task-event-row">${escapeHtml(event.message)}</div>`)
+          .join("");
+      }
+
+      function taskPreviewUrl(task, canPreview) {
+        if (!canPreview || !task.id || !task.payload?.cdp_url) {
+          return "";
+        }
+        return `/api/tasks/${encodeURIComponent(task.id)}/browser-preview.png?t=${Date.now()}`;
+      }
+
+      function renderTaskVisualPane(task, canStop) {
+        const siteUrl = taskSiteUrl(task);
+        const previewUrl = taskPreviewUrl(task, canStop);
+        const statusText = canStop
+          ? "浏览器执行窗口"
+          : task.status === "queued"
+            ? "等待进入执行槽"
+            : "最近一次执行状态";
+        const placeholder = previewUrl
+          ? "暂时取不到浏览器画面。请确认 Edge 已用远程调试端口启动，任务仍会继续刷新状态。"
+          : "任务未运行时不持续抓取浏览器画面，只保留最终交付文件和网页链接。";
+        return `
+          <div class="task-visual-pane">
+            <div class="visual-window-bar">
+              <span class="visual-window-dots"><span></span><span></span><span></span></span>
+              <span class="visual-window-title">${escapeHtml(statusText)}</span>
+            </div>
+            <div class="visual-screen">
+              ${
+                previewUrl
+                  ? `<img class="task-preview-image" src="${escapeHtml(previewUrl)}" alt="任务浏览器画面" loading="eager" decoding="async" onerror="this.classList.add('is-hidden'); this.nextElementSibling.hidden=false" onload="this.classList.remove('is-hidden'); this.nextElementSibling.hidden=true" />`
+                  : ""
+              }
+              <div class="visual-placeholder" ${previewUrl ? "hidden" : ""}>${escapeHtml(placeholder)}</div>
+            </div>
+            <div class="visual-meta">
+              <div class="visual-url" title="${escapeHtml(siteUrl || "暂无目标网页")}">${escapeHtml(siteUrl || "暂无目标网页")}</div>
+              <div class="task-event-list">${renderTaskEvents(task)}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderResultDeliverables(deliverables) {
+        const links = renderDeliverableLinks(deliverables);
+        if (!links) {
+          return "";
+        }
+        return `
+          <div class="result-line">
+            <span class="result-line-label">交付</span>
+            <span class="meta result-line-value result-chip-row">${links}</span>
+          </div>
+        `;
+      }
+
+      function renderResultLine(line) {
+        const text = String(line ?? "").trim();
+        if (!text) {
+          return "";
+        }
+        if (text.startsWith("交付物：")) {
+          return "";
+        }
+        const separatorIndex = text.indexOf("：");
+        if (separatorIndex > 0 && separatorIndex <= 8) {
+          const label = text.slice(0, separatorIndex);
+          const value = text.slice(separatorIndex + 1) || "暂无";
+          return `
+            <div class="result-line">
+              <span class="result-line-label">${escapeHtml(label)}</span>
+              <span class="meta result-line-value">${escapeHtml(value)}</span>
+            </div>
+          `;
+        }
+        return `
+          <div class="result-line">
+            <span class="result-line-label">信息</span>
+            <span class="meta result-line-value">${escapeHtml(text)}</span>
+          </div>
+        `;
       }
 
       function setResult(items) {
+        if (!els.resultList) {
+          return;
+        }
         els.resultList.innerHTML = "";
         if (!items || !items.length) {
-          els.resultList.innerHTML = '<div class="empty">这里会显示系统给你的结果提醒，比如上传成功、分析完成、执行失败原因等。</div>';
+          els.resultList.innerHTML = '<div class="empty">暂无操作消息。</div>';
           return;
         }
         items.forEach((item) => {
           const node = document.createElement("div");
           node.className = `result-item ${item.tone || ""}`.trim();
           const details = (item.lines || [])
-            .map((line) => `<div class="meta">${escapeHtml(line)}</div>`)
+            .map((line) => renderResultLine(line))
             .join("");
-          node.innerHTML = `<strong class="result-title">${escapeHtml(item.title)}</strong>${details}`;
+          node.innerHTML = `<strong class="result-title">${escapeHtml(item.title)}</strong>${details}${renderResultDeliverables(item.deliverables)}`;
           els.resultList.appendChild(node);
         });
       }
 
       function appendResult(item) {
+        if (!els.resultList) {
+          return;
+        }
         const existing = Array.from(els.resultList.children).filter((node) => !node.classList.contains("empty"));
         const next = [item];
         existing.slice(0, 2).forEach((node) => {
@@ -958,11 +2134,7 @@
       }
 
       function setLogs(lines) {
-        if (!lines || !lines.length) {
-          els.runLogs.textContent = "任务开始后，这里会持续刷新执行日志。";
-          return;
-        }
-        els.runLogs.textContent = lines.join("\n");
+        return;
       }
 
       function escapeHtml(value) {
@@ -972,11 +2144,6 @@
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;")
           .replaceAll("'", "&#39;");
-      }
-
-      function isPlaceholderSkillName(value) {
-        const normalized = String(value || "").trim().toLowerCase();
-        return ["", "未命名技能", "untitled skill", "new skill"].includes(normalized);
       }
 
       function sourceTypeLabel(sourceType) {
@@ -992,8 +2159,18 @@
 
       function executionModeLabel(taskType) {
         const normalized = String(taskType || "").trim();
+        const adapter = state.executionAdapters.find((item) => item.task_type === normalized || item.id === normalized);
+        if (adapter?.label) {
+          return adapter.label;
+        }
         if (normalized === "browser_use_live_workflow") {
           return "Browser Use 智能执行";
+        }
+        if (normalized === "smart_router_live_workflow") {
+          return "智能路由";
+        }
+        if (normalized === "playwright_browser_use_live_workflow") {
+          return "Playwright 优先";
         }
         if (normalized === "generic_live_workflow") {
           return "传统 CDP 回放";
@@ -1005,6 +2182,65 @@
           return "环评专用流程";
         }
         return normalized || "Browser Use 智能执行";
+      }
+
+      function renderExecutionAdapters(options = {}) {
+        const currentValue = options.useDefault
+          ? state.defaultExecutionTaskType
+          : (els.taskExecutionMode.value || state.defaultExecutionTaskType);
+        const adapters = Array.isArray(state.executionAdapters) ? state.executionAdapters : [];
+        if (!adapters.length) {
+          return;
+        }
+        els.taskExecutionMode.innerHTML = "";
+        adapters.forEach((adapter) => {
+          const option = document.createElement("option");
+          option.value = adapter.task_type || adapter.id;
+          option.textContent = adapter.enabled
+            ? adapter.label || adapter.id
+            : `${adapter.label || adapter.id}（待接入）`;
+          option.disabled = !adapter.enabled;
+          option.dataset.summary = adapter.summary || adapter.disabled_reason || "";
+          option.dataset.adapterId = adapter.id || "";
+          els.taskExecutionMode.appendChild(option);
+        });
+        const availableValues = new Set(
+          [...els.taskExecutionMode.options]
+            .filter((option) => !option.disabled)
+            .map((option) => option.value)
+        );
+        els.taskExecutionMode.value = availableValues.has(currentValue)
+          ? currentValue
+          : state.defaultExecutionTaskType;
+        if (!availableValues.has(els.taskExecutionMode.value)) {
+          const firstEnabled = [...els.taskExecutionMode.options].find((option) => !option.disabled);
+          if (firstEnabled) {
+            els.taskExecutionMode.value = firstEnabled.value;
+          }
+        }
+        updateExecutionModeHint();
+      }
+
+      function updateExecutionModeHint() {
+        if (!els.executionModeHint) {
+          return;
+        }
+        const selectedOption = els.taskExecutionMode.selectedOptions?.[0];
+        const adapterId = selectedOption?.dataset.adapterId || "";
+        const adapter = state.executionAdapters.find((item) => item.id === adapterId || item.task_type === els.taskExecutionMode.value);
+        els.executionModeHint.textContent =
+          adapter?.summary ||
+          adapter?.disabled_reason ||
+          selectedOption?.dataset.summary ||
+          "选择本次任务使用的执行适配器。";
+      }
+
+      async function loadExecutionAdapters() {
+        const data = await api("/api/execution-adapters");
+        const firstLoad = !state.executionAdapters.length;
+        state.executionAdapters = data.adapters || [];
+        state.defaultExecutionTaskType = data.default_task_type || "browser_use_live_workflow";
+        renderExecutionAdapters({ useDefault: firstLoad });
       }
 
       function compactSiteLabel(siteUrl) {
@@ -1050,6 +2286,14 @@
         els.panels.forEach((panel) => {
           panel.classList.toggle("active", panel.id === panelId);
         });
+        if (els.quickGuideSection) {
+          els.quickGuideSection.hidden = panelId !== "skillsPanel";
+        }
+      }
+
+      function activePanelId() {
+        const active = Array.from(els.panels).find((panel) => panel.classList.contains("active"));
+        return active?.id || "skillsPanel";
       }
 
       function renderSteps(steps) {
@@ -1200,37 +2444,94 @@
       }
 
       function renderTasks(tasks) {
+        tasks = Array.isArray(tasks) ? tasks : [];
         els.taskList.innerHTML = "";
+        renderTaskSummary(tasks);
         if (!tasks.length) {
           els.taskList.innerHTML = '<div class="empty">你还没有保存过任务。需要定时自动跑时，再把任务保存下来即可。</div>';
           return;
         }
 
-        tasks.forEach((task) => {
+        const orderedTasks = [...tasks].sort((left, right) => {
+          const rankDiff = taskSortRank(left) - taskSortRank(right);
+          if (rankDiff !== 0) {
+            return rankDiff;
+          }
+          return String(right.last_run_at_iso || right.created_at_iso || "").localeCompare(String(left.last_run_at_iso || left.created_at_iso || ""));
+        });
+
+        orderedTasks.forEach((task) => {
           const skillNames = Array.isArray(task.payload?.skill_names) && task.payload.skill_names.length
             ? task.payload.skill_names.join("、")
             : "未绑定技能";
-          const lines = [
-            `状态：${task.status}`,
-            `执行模式：${executionModeLabel(task.task_type || task.payload?.task_type)}`,
-            task.current_step && task.total_steps ? `进度：第 ${task.current_step}/${task.total_steps} 步` : "",
-            task.progress_stage ? `阶段：${task.progress_stage}` : "",
-            `频次：${task.frequency}`,
-            `时间：${task.run_at_iso || "未设置"}`,
-            `技能：${skillNames}`,
-            `目标：${task.payload?.objective || task.payload?.user_request || "未填写"}`,
-            `执行次数：${task.run_count || 0}${task.last_run_at_iso ? ` · 最近一次：${task.last_run_at_iso}` : ""}`,
-          ].filter(Boolean);
-          if (task.last_error) {
-            lines.push(`最近错误：${task.last_error}`);
-          }
+          const latestEvent = Array.isArray(task.progress_events) && task.progress_events.length
+            ? task.progress_events[task.progress_events.length - 1]
+            : null;
+          const canStop = isActiveTaskStatus(task.status);
+          const progressMode = task.progress_mode || (canStop ? "activity" : "determinate");
+          const isIndeterminate = ["activity", "queued"].includes(progressMode);
+          const progressPercent = Math.max(0, Math.min(100, Number(task.progress_percent) || 0));
+          const stepLabel = progressMode === "determinate" && task.current_step && task.total_steps
+            ? `第 ${task.current_step}/${task.total_steps} 步`
+            : task.progress_stage || taskStatusLabel(task.status);
+          const runtime = runtimeSummary(taskProgressOptions(task));
+          const objective = task.payload?.objective || task.payload?.user_request || "未填写目标";
+          const fields = [
+            ["模式", executionModeLabel(task.task_type || task.payload?.task_type)],
+            ["频次", task.frequency || "未设置"],
+            ["技能", skillNames],
+            ["运行", runtime],
+            ["Token", formatTokenUsage(task.token_usage || {}, task)],
+          ];
+          const deliverableLinks = renderTaskDeliverables(task);
+          const benchmarkResult = renderTaskBenchmark(task);
+          const waitingDeliverables = !canStop && (task.run_count || 0) > 0 && !deliverableLinks && !benchmarkResult
+            ? '<div class="meta">这次任务没有检测到下载文件或最终网页链接。</div>'
+            : "";
           const node = document.createElement("div");
-          node.className = "task-item";
+          node.className = `task-item ${canStop ? "active-task" : ""}`;
           node.innerHTML = `
-            <strong class="task-title">${escapeHtml(task.name)}</strong>
-            ${lines.map((line) => `<div class="meta">${escapeHtml(line)}</div>`).join("")}
+            <div class="task-card-main">
+              <div class="task-card-head">
+                <strong class="task-title">${escapeHtml(task.name)}</strong>
+                <span class="status-chip ${taskStatusClass(task.status)}">${escapeHtml(taskStatusLabel(task.status))}</span>
+              </div>
+              <div class="task-mini-progress" aria-label="任务进度">
+                <div class="task-mini-progress-bar ${isIndeterminate ? "indeterminate" : ""}" style="width: ${isIndeterminate ? 38 : progressPercent}%"></div>
+              </div>
+              <div class="meta task-card-meta-row">
+                <span>${escapeHtml(stepLabel)}</span>
+                <span>${isIndeterminate ? "实时" : `${progressPercent}%`}</span>
+              </div>
+              <div class="task-card-fields">
+                ${fields
+                  .map(([label, value]) => `
+                    <div class="task-card-field">
+                      <span>${escapeHtml(label)}</span>
+                      <strong>${escapeHtml(value)}</strong>
+                    </div>
+                  `)
+                  .join("")}
+              </div>
+            <div class="meta task-objective">目标：${escapeHtml(objective)}</div>
+            ${latestEvent?.message ? `<div class="meta task-event">最近：${escapeHtml(compactTaskEventMessage(latestEvent.message))}</div>` : ""}
+              ${task.last_run_at_iso ? `<div class="meta">最近执行：${escapeHtml(task.last_run_at_iso)}</div>` : ""}
+              ${task.last_error ? `<div class="task-error">${escapeHtml(task.last_error)}</div>` : ""}
+              ${benchmarkResult}
+              ${deliverableLinks}
+              ${waitingDeliverables}
+              ${
+                canStop
+                  ? `<div class="skill-actions"><button class="warn-btn tiny-btn cancel-task-btn" data-task-id="${escapeHtml(task.id)}">${task.status === "cancelling" ? "停止中" : task.status === "queued" ? "取消排队" : "停止"}</button></div>`
+                  : ""
+              }
+            </div>
+            ${renderTaskVisualPane(task, canStop)}
           `;
           els.taskList.appendChild(node);
+        });
+        els.taskList.querySelectorAll(".cancel-task-btn").forEach((button) => {
+          button.addEventListener("click", () => stopTask(button.dataset.taskId || "").catch((error) => handleError("停止任务", error)));
         });
       }
 
@@ -1389,6 +2690,117 @@
               await analyzeVideo();
             } catch (error) {
               handleError("用录屏分析", error);
+            } finally {
+              button.disabled = false;
+            }
+          });
+        });
+
+        els.recordingList.querySelectorAll(".delete-recording-btn").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const sessionId = button.dataset.sessionId || "";
+            if (!sessionId) {
+              return;
+            }
+            if (!window.confirm("确定删除这个录制视频吗？监听事件和截图会保留。")) {
+              return;
+            }
+            await api(`/api/browser-listener/recording?session_id=${encodeURIComponent(sessionId)}`, {
+              method: "DELETE",
+            });
+            if (state.latestListenerSessionId === sessionId) {
+              state.uploadedVideoPath = "";
+              els.videoPath.value = "";
+            }
+            if (state.selectedRecordingSessionId === sessionId) {
+              state.selectedRecordingSessionId = "";
+            }
+            appendResult({
+              title: "录制视频已删除",
+              tone: "success",
+              lines: [`会话 ID：${sessionId}`, "监听事件和截图已保留。"],
+            });
+            await refreshSessionSummary();
+            await refreshRecordings({ force: true });
+          });
+        });
+      }
+
+      function renderRecordings(recordings) {
+        els.recordingList.innerHTML = "";
+        if (!recordings || !recordings.length) {
+          els.recordingList.innerHTML = '<div class="empty">这里会显示刚保存的演示录屏和监听记录。点击“开始演示”，完成后点击“停止演示”。</div>';
+          return;
+        }
+
+        recordings.forEach((recording) => {
+          const node = document.createElement("div");
+          node.className = "status-item recording-card";
+          const hasRecording = Boolean(recording.has_recording !== false && recording.video_url);
+          const videoUrl = hasRecording
+            ? `${recording.video_url}${String(recording.video_url).includes("?") ? "&" : "?"}t=${encodeURIComponent(recording.saved_at_iso || Date.now())}`
+            : "";
+          const hasTimeline = recordingHasTimeline(recording);
+          const primaryMode = hasRecording ? "video" : "listener";
+          const primaryLabel = hasRecording
+            ? (hasTimeline ? "用这个视频分析" : "缺少监听时间轴")
+            : (hasTimeline ? "用监听记录分析" : "缺少可分析截图");
+          const videoMarkup = hasRecording
+            ? `<video controls preload="metadata" src="${escapeHtml(videoUrl)}"></video>`
+            : `<div class="meta">本次演示已保存监听事件和截图，但没有录屏视频。仍可基于监听记录继续分析。</div>`;
+          const deleteMarkup = hasRecording
+            ? `<button class="warn-btn delete-recording-btn" data-session-id="${escapeHtml(recording.session_id)}">删除视频</button>`
+            : "";
+          node.innerHTML = `
+            <strong class="status-title">${escapeHtml(recording.title || "未命名演示")}</strong>
+            <div class="meta">${
+              hasRecording
+                ? (hasTimeline ? "已保存录屏、监听事件和截图。" : "已保存录屏，但缺少可恢复的监听时间轴。")
+                : "已保存监听记录；录屏视频未保存或上传失败。"
+            }</div>
+            <div class="pill-line">
+              ${hasRecording ? `<span class="mini-pill">${escapeHtml(formatDurationMs(recording.duration_ms))}</span>` : ""}
+              ${hasRecording ? `<span class="mini-pill">${escapeHtml(formatFileSize(recording.file_size_bytes))}</span>` : ""}
+              <span class="mini-pill">${Number(recording.event_count || 0)} 事件</span>
+              <span class="mini-pill">${Number(recording.key_event_count || 0)} 关键事件</span>
+              <span class="mini-pill">${Number(recording.screenshot_count || 0)} 截图</span>
+            </div>
+            ${videoMarkup}
+            <div class="recording-actions">
+              <button class="secondary use-recording-btn" data-mode="${primaryMode}" data-session-id="${escapeHtml(recording.session_id)}" data-path="${escapeHtml(recording.recording_path || "")}" ${hasTimeline ? "" : "disabled"}>
+                ${primaryLabel}
+              </button>
+              ${deleteMarkup}
+            </div>
+          `;
+          els.recordingList.appendChild(node);
+        });
+
+        els.recordingList.querySelectorAll(".use-recording-btn").forEach((button) => {
+          button.addEventListener("click", async () => {
+            button.disabled = true;
+            state.selectedRecordingSessionId = button.dataset.sessionId || state.selectedRecordingSessionId;
+            state.latestListenerSessionId = state.selectedRecordingSessionId || state.latestListenerSessionId;
+            if (button.dataset.path) {
+              state.uploadedVideoPath = button.dataset.path;
+            }
+            els.videoPath.value = state.uploadedVideoPath;
+            appendResult({
+              title: button.dataset.mode === "listener" ? "已选择监听记录" : "已选择录制视频",
+              tone: "success",
+              lines: [
+                `会话 ID：${state.selectedRecordingSessionId || state.latestListenerSessionId}`,
+                state.uploadedVideoPath ? `视频路径：${state.uploadedVideoPath}` : "将使用监听事件和截图分析。",
+              ],
+            });
+            try {
+              if (button.dataset.mode === "listener") {
+                await analyzeListenerSessionById(state.selectedRecordingSessionId || state.latestListenerSessionId);
+              } else {
+                await analyzeVideo();
+              }
+            } catch (error) {
+              handleError(button.dataset.mode === "listener" ? "用监听记录分析" : "用录屏分析", error);
             } finally {
               button.disabled = false;
             }
@@ -1670,6 +3082,8 @@
           lastPayload = payload;
           setAnalysisProgress(payload.progress_percent, payload.stage, {
             estimated: Boolean(payload.progress_estimated),
+            mode: payload.progress_mode,
+            status: payload.status,
           });
           if (payload.status === "completed") {
             return payload.result;
@@ -1690,26 +3104,20 @@
         state.analyzedSourceType = sourceType;
         state.analyzedRequest = requestText;
         state.analyzedSiteUrl = result.plan?.site_url || "";
-        if (result.suggested_skill_name && isPlaceholderSkillName(els.skillName.value)) {
-          els.skillName.value = result.suggested_skill_name;
-        }
-        if (result.suggested_skill_description && !els.skillDescription.value.trim()) {
-          els.skillDescription.value = result.suggested_skill_description;
-        }
         renderSteps(state.analyzedSteps);
         setLogs(result.plan?.steps?.map((step) => `步骤 ${step.step_number}: ${step.action} ${step.target || ""}`.trim()) || []);
       }
 
       async function analyzeVideo() {
         const payload = {
-          video_path: els.videoPath.value.trim() || state.uploadedVideoPath || "",
-          user_request: els.skillRequest.value.trim(),
+          video_path: elementValue(els.videoPath).trim() || state.uploadedVideoPath || "",
+          user_request: "",
           listener_session_id: state.selectedRecordingSessionId || state.latestListenerSessionId || null,
           start_second: 0,
           end_second: null,
           max_frames: 12,
         };
-        setAnalysisProgress(0, "正在提交视频分析任务");
+        setAnalysisProgress(0, "正在提交视频分析任务", { mode: "activity" });
         const job = await api("/api/analyze/start", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1794,13 +3202,335 @@
         });
       }
 
+      function rememberSavedRecording(recordingResult, fallbackSessionId = "") {
+        const sessionId = recordingResult?.session_id || fallbackSessionId || "";
+        if (sessionId) {
+          state.latestListenerSessionId = sessionId;
+          state.selectedRecordingSessionId = sessionId;
+        }
+        if (recordingResult?.recording_path) {
+          state.uploadedVideoPath = recordingResult.recording_path;
+          els.videoPath.value = recordingResult.recording_path;
+        }
+      }
+
+      async function waitForSavedRecording(sessionId, timeoutMs = 8000) {
+        if (!sessionId) {
+          return null;
+        }
+        const startedAt = Date.now();
+        while (Date.now() - startedAt <= timeoutMs) {
+          const summary = await api(`/api/browser-listener/session?session_id=${encodeURIComponent(sessionId)}`);
+          if (summary?.has_recording && summary.recording_path) {
+            return summary;
+          }
+          await new Promise((resolve) => window.setTimeout(resolve, 500));
+        }
+        return null;
+      }
+
+      async function startDemo() {
+        const sessionId = crypto.randomUUID();
+        state.selectedRecordingSessionId = sessionId;
+        state.latestListenerSessionId = sessionId;
+        await startScreenRecording(sessionId);
+        let response = null;
+        try {
+          response = await extensionBridge("eyeclaw-listener-start-session-inline", {
+            apiBase: `${location.origin}`,
+            clientName: "eyeclaw-listener",
+            sessionId,
+          });
+        } catch (error) {
+          await stopScreenRecording({ sessionId, allowExistingSaved: false }).catch(() => {});
+          throw error;
+        }
+        state.extensionAvailable = true;
+        state.extensionSettings = response.settings || null;
+        state.latestListenerSessionId = sessionId;
+        state.selectedRecordingSessionId = sessionId;
+        updateExtensionUi();
+        await refreshSessionSummary();
+        await refreshRecordings({ force: true });
+        appendResult({
+          title: "演示已开始",
+          tone: "success",
+          lines: [
+            "监听和录屏已同步开启；完成操作后请回到这里点击“停止演示”。",
+            "停止演示后会立即保存录屏文件，并刷新到下方列表。",
+            `会话 ID：${sessionId}`,
+          ],
+        });
+      }
+
+      async function stopScreenRecording(options = {}) {
+        const recording = state.localRecording;
+        const fallbackSessionId = options.sessionId || state.extensionSettings?.sessionId || state.latestListenerSessionId || "";
+        if (!recording) {
+          if (options.allowExistingSaved !== false) {
+            const savedSummary = await waitForSavedRecording(fallbackSessionId, 2500).catch(() => null);
+            if (savedSummary?.has_recording) {
+              const result = {
+                session_id: savedSummary.session_id || fallbackSessionId,
+                recording_path: savedSummary.recording_path,
+                mime_type: savedSummary.recording_mime_type || "video/webm",
+                already_saved: true,
+              };
+              rememberSavedRecording(result, fallbackSessionId);
+              return result;
+            }
+          }
+          throw new Error("没有找到正在录制的视频数据。请确认是从 EyeClaw 页面点击“开始演示”，并在同一个页面点击“停止演示”。");
+        }
+
+        state.localRecording = null;
+        const endedAtMs = Date.now();
+        if (recording.recorder.state !== "inactive") {
+          await new Promise((resolve) => {
+            recording.recorder.addEventListener("stop", resolve, { once: true });
+            recording.recorder.stop();
+          });
+        }
+        recording.stream.getTracks().forEach((track) => track.stop());
+
+        const blob = new Blob(recording.chunks, { type: recording.mimeType || "video/webm" });
+        if (!blob.size) {
+          throw new Error("录屏没有产生有效视频数据，请确认录制权限已授予，并且录制过程中没有刷新 EyeClaw 页面。");
+        }
+
+        const form = new FormData();
+        form.append("session_id", recording.sessionId);
+        form.append("started_at_ms", String(recording.startedAtMs));
+        form.append("ended_at_ms", String(endedAtMs));
+        form.append("mime_type", blob.type || "video/webm");
+        form.append("video", blob, `session-${recording.sessionId}.webm`);
+        const result = await api("/api/browser-listener/session-recording", {
+          method: "POST",
+          body: form,
+        });
+        rememberSavedRecording(result, recording.sessionId);
+        await waitForSavedRecording(result.session_id || recording.sessionId, 5000).catch(() => null);
+        updateExtensionUi();
+        await refreshSessionSummary();
+        await refreshRecordings({ force: true });
+        return result;
+      }
+
+      async function stopDemo() {
+        const sessionId = state.localRecording?.sessionId || state.extensionSettings?.sessionId || state.latestListenerSessionId || "";
+        let recordingResult = null;
+        let stopError = null;
+
+        try {
+          recordingResult = await stopScreenRecording({ sessionId });
+        } catch (error) {
+          stopError = error;
+        }
+
+        let response = null;
+        try {
+          response = await extensionBridge("eyeclaw-listener-stop-session-inline", {
+            apiBase: `${location.origin}`,
+            clientName: "eyeclaw-listener",
+          });
+        } catch (error) {
+          stopError = stopError || error;
+        }
+
+        if (response) {
+          state.extensionAvailable = true;
+          state.extensionSettings = response.settings || null;
+        }
+        if (sessionId) {
+          state.latestListenerSessionId = sessionId;
+          state.selectedRecordingSessionId = sessionId;
+        }
+        updateExtensionUi();
+        await refreshSessionSummary();
+        await refreshRecordings({ force: true });
+
+        if (stopError) {
+          throw stopError;
+        }
+
+        appendResult({
+          title: "演示已保存",
+          tone: "success",
+          lines: [
+            "监听记录、截图和录屏保存完成，已刷新到下方列表。",
+            recordingResult?.recording_path ? `录屏文件：${recordingResult.recording_path}` : "录屏文件已保存。",
+            `会话 ID：${recordingResult?.session_id || sessionId || state.latestListenerSessionId}`,
+          ].filter(Boolean),
+        });
+      }
+
+      async function startDemo() {
+        const sessionId = crypto.randomUUID();
+        state.selectedRecordingSessionId = sessionId;
+        state.latestListenerSessionId = sessionId;
+
+        let response = null;
+        let extensionError = null;
+        let localRecordingWarning = null;
+
+        try {
+          response = await extensionBridge("eyeclaw-listener-start-session-inline", {
+            apiBase: `${location.origin}`,
+            clientName: "eyeclaw-listener",
+            sessionId,
+            recordingMode: "next-recordable-tab",
+          });
+        } catch (error) {
+          extensionError = error;
+        }
+
+        try {
+          await startScreenRecording(sessionId);
+        } catch (error) {
+          localRecordingWarning = error;
+        }
+
+        if (!response && !state.localRecording) {
+          throw extensionError || localRecordingWarning || new Error("演示录制启动失败。");
+        }
+
+        state.extensionAvailable = Boolean(response);
+        state.extensionSettings = response?.settings || state.extensionSettings || {
+          enabled: Boolean(state.localRecording),
+          sessionId,
+          recordingState: state.localRecording ? "recording" : "idle",
+        };
+        state.latestListenerSessionId = sessionId;
+        state.selectedRecordingSessionId = sessionId;
+        updateExtensionUi();
+        await refreshSessionSummary();
+        await refreshRecordings({ force: true });
+
+        appendResult({
+          title: "演示已开始",
+          tone: "success",
+          lines: [
+            response
+              ? "扩展监听已开启；切到目标网页后，扩展会录制目标标签页并采集事件和截图。"
+              : "扩展没有响应；当前只启用了本地屏幕录制，后续可能缺少监听事件。",
+            state.localRecording
+              ? "本地屏幕录制也已开启；停止演示时会上传录屏文件。"
+              : `本地屏幕录制未开启：${localRecordingWarning?.message || "浏览器未授权或不支持屏幕录制"}。`,
+            extensionError ? `扩展启动提示：${extensionError.message}` : "",
+            `会话 ID：${sessionId}`,
+          ].filter(Boolean),
+        });
+      }
+
+      async function stopDemo() {
+        const sessionId = state.localRecording?.sessionId || state.extensionSettings?.sessionId || state.latestListenerSessionId || "";
+        let recordingResult = null;
+        let stopError = null;
+
+        let response = null;
+        try {
+          response = await extensionBridge("eyeclaw-listener-stop-session-inline", {
+            apiBase: `${location.origin}`,
+            clientName: "eyeclaw-listener",
+          });
+        } catch (error) {
+          stopError = error;
+        }
+
+        const extensionRecordingResult = response?.recording_result?.upload || null;
+        if (extensionRecordingResult?.recording_path) {
+          recordingResult = extensionRecordingResult;
+          rememberSavedRecording(recordingResult, sessionId);
+        }
+
+        try {
+          const localRecordingResult = await stopScreenRecording({ sessionId });
+          if (localRecordingResult?.recording_path) {
+            recordingResult = localRecordingResult;
+          }
+        } catch (error) {
+          stopError = stopError || error;
+        }
+
+        if (response) {
+          state.extensionAvailable = true;
+          state.extensionSettings = response.settings || null;
+        }
+        if (sessionId) {
+          state.latestListenerSessionId = sessionId;
+          state.selectedRecordingSessionId = sessionId;
+        }
+        updateExtensionUi();
+
+        const savedSummary = await waitForSavedRecording(sessionId, 5000).catch(() => null);
+        if (savedSummary?.has_recording && savedSummary.recording_path && !recordingResult?.recording_path) {
+          recordingResult = {
+            session_id: savedSummary.session_id || sessionId,
+            recording_path: savedSummary.recording_path,
+            mime_type: savedSummary.recording_mime_type || "video/webm",
+            already_saved: true,
+          };
+          rememberSavedRecording(recordingResult, sessionId);
+        }
+
+        await refreshSessionSummary();
+        await refreshRecordings({ force: true });
+
+        if (stopError && !recordingResult?.recording_path) {
+          throw stopError;
+        }
+
+        const recordingStatusLine = recordingResult?.recording_path
+          ? `录屏文件：${recordingResult.recording_path}`
+          : `录屏未保存：${response?.recording_result?.reason || stopError?.message || "扩展没有返回录屏上传结果"}`;
+
+        appendResult({
+          title: "演示已保存",
+          tone: recordingResult?.recording_path ? "success" : "warn",
+          lines: [
+            recordingResult?.recording_path
+              ? "监听记录、截图和录屏已保存，已刷新到下方列表。"
+              : "监听记录和截图已保存，但本次没有拿到录屏文件。请看下面的原因提示。",
+            recordingStatusLine,
+            `会话 ID：${recordingResult?.session_id || sessionId || state.latestListenerSessionId}`,
+          ].filter(Boolean),
+        });
+      }
+
+      async function analyzeListenerSessionById(sessionId) {
+        const payload = {
+          session_id: sessionId || state.selectedRecordingSessionId || state.latestListenerSessionId || null,
+          user_request: "",
+          max_events: 8,
+        };
+        setAnalysisProgress(0, "正在提交监听记录分析任务", { mode: "activity" });
+        const job = await api("/api/browser-listener/analyze/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await pollAnalysisJob(job.job_id);
+        applyAnalysisResult(result, "listener_analysis", payload.user_request);
+        await refreshSessionSummary();
+        await refreshRecordings({ force: true });
+        appendResult({
+          title: "监听记录分析完成",
+          tone: "success",
+          lines: [
+            `使用事件数：${result.event_count}`,
+            `输出步骤：${state.analyzedSteps.length}`,
+            result.suggested_skill_name ? `建议技能名：${result.suggested_skill_name}` : "",
+          ].filter(Boolean),
+        });
+      }
+
       async function analyzeDemo() {
         const payload = {
           session_id: state.extensionSettings?.sessionId || state.latestListenerSessionId || null,
-          user_request: els.skillRequest.value.trim(),
+          user_request: "",
           max_events: 8,
         };
-        setAnalysisProgress(0, "正在提交演示分析任务");
+        setAnalysisProgress(0, "正在提交演示分析任务", { mode: "activity" });
         const job = await api("/api/browser-listener/analyze/start", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1832,13 +3562,13 @@
         }
 
         const payload = {
-          name: els.skillName.value.trim() || "未命名技能",
-          description: els.skillDescription.value.trim(),
+          name: "未命名技能",
+          description: "",
           source_type: state.analyzedSourceType || "analysis",
           steps: state.analyzedSteps,
           site_url: state.analyzedSiteUrl || null,
-          user_request: state.analyzedRequest || els.skillRequest.value.trim(),
-          video_path: els.videoPath.value.trim() || state.uploadedVideoPath || null,
+          user_request: state.analyzedRequest || "",
+          video_path: elementValue(els.videoPath).trim() || state.uploadedVideoPath || null,
           listener_session_id: state.selectedRecordingSessionId || state.latestListenerSessionId || null,
         };
         const data = await api("/api/skills", {
@@ -1951,12 +3681,13 @@
       async function pollTaskStatus(taskId) {
         while (true) {
           const data = await api(`/api/tasks/${encodeURIComponent(taskId)}`);
-          state.runningTaskId = data.status === "running" ? taskId : "";
+          state.runningTaskId = isActiveTaskStatus(data.status) ? taskId : "";
+          syncTaskControls();
           setLogs(data.logs || []);
           setTaskProgress(data.progress_percent || 0, data.progress_stage || "处理中", {
-            estimated: Boolean(data.progress_estimated),
+            ...taskProgressOptions(data),
           });
-          if (data.status !== "running") {
+          if (!isActiveTaskStatus(data.status)) {
             return data;
           }
           await refreshTasks();
@@ -1974,54 +3705,108 @@
         };
 
         try {
-          setTaskProgress(3, "正在提交任务");
+          setTaskProgress(0, "正在提交任务", { mode: "queued" });
           const task = await api("/api/tasks/run-now/start", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
           state.runningTaskId = task.id || "";
+          syncTaskControls();
           setLogs(task.logs || []);
-          setTaskProgress(task.progress_percent || 8, task.progress_stage || "任务已开始");
-          const data = await pollTaskStatus(task.id);
-          appendResult({
-            title: data.status === "completed" ? "任务执行完成" : data.status === "manual" ? "任务执行暂停" : "任务执行结果",
-            tone: data.status === "completed" ? "success" : data.status === "manual" ? "warn" : "error",
-            lines: [
-              `状态：${data.status}`,
-              `执行模式：${executionModeLabel(data.task_type)}`,
-              data.current_step && data.total_steps ? `完成进度：第 ${data.current_step}/${data.total_steps} 步` : "",
-              `技能：${(data.skill_names || []).join("、") || "未绑定技能"}`,
-              data.last_error || "",
-            ].filter(Boolean),
+          setTaskProgress(task.progress_percent || 0, task.progress_stage || "任务已开始", {
+            ...taskProgressOptions(task),
           });
+          await pollTaskStatus(task.id);
+          await refreshTasks();
         } catch (error) {
           const payloadData = error.payload || {};
           setLogs(payloadData.logs || []);
           setTaskProgress(payloadData.progress_percent || 0, payloadData.progress_stage || "执行失败", {
-            estimated: Boolean(payloadData.progress_estimated),
+            ...taskProgressOptions(payloadData),
           });
-          if (error.status === 409 || payloadData.status === "manual") {
-            appendResult({
-              title: "任务执行暂停，等待人工接管",
-              tone: "warn",
-              lines: [
-                payloadData.last_error || payloadData.message || error.message,
-                "请先在 Edge 中完成扫码或确认操作，再回到控制台继续。",
-              ],
-            });
-          } else {
-            appendResult({
-              title: "任务执行失败",
-              tone: "error",
-              lines: [payloadData.last_error || error.message],
-            });
-          }
+          await refreshTasks();
         } finally {
+          syncTaskControls();
           if (!state.runningTaskId) {
             await refreshTasks();
           }
         }
+      }
+
+      async function runBenchmark() {
+        const previousMode = els.taskExecutionMode.value;
+        const payload = {
+          name: els.taskName.value.trim() || "执行器对比测试",
+          objective: els.taskObjective.value.trim(),
+          cdp_url: els.taskCdpUrl.value.trim(),
+          task_type: "execution_adapter_benchmark",
+          skill_ids: selectedSkillIds(),
+          benchmark_runs: 1,
+        };
+
+        try {
+          setTaskProgress(0, "正在提交对比测试", { mode: "queued" });
+          const task = await api("/api/tasks/run-now/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          state.runningTaskId = task.id || "";
+          syncTaskControls();
+          setLogs(task.logs || []);
+          setTaskProgress(task.progress_percent || 0, task.progress_stage || "对比测试已开始", {
+            ...taskProgressOptions(task),
+          });
+          await pollTaskStatus(task.id);
+          await refreshTasks();
+        } catch (error) {
+          const payloadData = error.payload || {};
+          setLogs(payloadData.logs || []);
+          setTaskProgress(payloadData.progress_percent || 0, payloadData.progress_stage || "对比测试失败", {
+            ...taskProgressOptions(payloadData),
+          });
+          await refreshTasks();
+        } finally {
+          els.taskExecutionMode.value = previousMode;
+          updateExecutionModeHint();
+          syncTaskControls();
+          if (!state.runningTaskId) {
+            await refreshTasks();
+          }
+        }
+      }
+
+      async function stopTask(taskId = state.runningTaskId) {
+        if (!taskId) {
+          appendResult({
+            title: "没有正在执行的任务",
+            tone: "warn",
+            lines: ["当前没有可停止的运行中任务。"],
+          });
+          return;
+        }
+        els.stopTaskBtn.disabled = true;
+        setTaskProgress(0, "正在发送停止请求", { mode: "activity" });
+        const data = await api(`/api/tasks/${encodeURIComponent(taskId)}/cancel`, {
+          method: "POST",
+        });
+        state.runningTaskId = isActiveTaskStatus(data.status) ? taskId : "";
+        syncTaskControls();
+        setLogs(data.logs || []);
+        setTaskProgress(data.progress_percent || 0, data.progress_stage || "正在停止任务", {
+          ...taskProgressOptions(data),
+        });
+        appendResult({
+          title: data.status === "cancelled" ? "任务已停止" : "正在停止任务",
+          tone: "warn",
+          lines: [
+            `任务：${data.name || taskId}`,
+            `状态：${data.status}`,
+            "如果 Browser Use 正在等待模型返回，停止会在下一个安全检查点生效。",
+          ],
+        });
+        await refreshTasks();
       }
 
       async function saveTask() {
@@ -2057,14 +3842,18 @@
         const data = await api("/api/schedules");
         const tasks = data.tasks || [];
         renderTasks(tasks);
-        const runningTask = tasks.find((task) => task.status === "running");
+        const trackedTask = tasks.find((task) => task.id === state.runningTaskId && isActiveTaskStatus(task.status));
+        const runningTask = trackedTask || tasks.find((task) => isActiveTaskStatus(task.status));
         if (runningTask) {
           state.runningTaskId = runningTask.id || "";
           setLogs(runningTask.logs || []);
           setTaskProgress(runningTask.progress_percent || 0, runningTask.progress_stage || "任务执行中", {
-            estimated: Boolean(runningTask.progress_estimated),
+            ...taskProgressOptions(runningTask),
           });
+        } else {
+          state.runningTaskId = "";
         }
+        syncTaskControls();
       }
 
       function startAutoRefresh() {
@@ -2072,9 +3861,12 @@
           window.clearInterval(state.refreshTimer);
         }
         state.refreshTimer = window.setInterval(async () => {
-          await refreshExtensionState();
-          await refreshSessionSummary();
-          await refreshRecordings();
+          const panelId = activePanelId();
+          if (panelId === "skillsPanel") {
+            await refreshExtensionState();
+            await refreshSessionSummary();
+            await refreshRecordings();
+          }
           await refreshTasks();
         }, 4000);
       }
@@ -2092,6 +3884,7 @@
       });
 
       els.taskFrequency.addEventListener("change", syncFrequencyVisibility);
+      els.taskExecutionMode.addEventListener("change", updateExecutionModeHint);
       els.skillSearch.addEventListener("input", () => renderSavedSkills(state.skills));
       els.taskSkillSearch.addEventListener("input", () => renderSkillOptions(state.skills));
       els.refreshSkillsBtn.addEventListener("click", () => refreshSkills().catch((error) => handleError("刷新技能", error)));
@@ -2102,8 +3895,11 @@
       els.analyzeDemoBtn.addEventListener("click", () => analyzeDemo().catch((error) => handleError("分析演示", error)));
       els.saveSkillBtn.addEventListener("click", () => saveSkill().catch((error) => handleError("保存技能", error)));
       els.runNowBtn.addEventListener("click", () => runNow().catch((error) => handleError("执行任务", error)));
+      els.benchmarkTaskBtn.addEventListener("click", () => runBenchmark().catch((error) => handleError("对比测试", error)));
+      els.stopTaskBtn.addEventListener("click", () => stopTask().catch((error) => handleError("停止任务", error)));
       els.saveTaskBtn.addEventListener("click", () => saveTask().catch((error) => handleError("保存任务", error)));
       els.refreshTasksBtn.addEventListener("click", () => refreshTasks().catch((error) => handleError("刷新任务列表", error)));
+      els.refreshTasksBtnTop.addEventListener("click", () => refreshTasks().catch((error) => handleError("刷新任务列表", error)));
 
       setDefaultRunAt();
       syncFrequencyVisibility();
@@ -2114,9 +3910,11 @@
       setLogs([]);
       setAnalysisProgress(0, "等待开始");
       setTaskProgress(0, "等待执行");
+      syncTaskControls();
       renderListenerStatus(null);
+      window.setInterval(updateTaskRuntimeLabel, 1000);
 
-      Promise.allSettled([loadStatus(), refreshExtensionState(), refreshSkills(), refreshTasks(), refreshRecordings()])
+      Promise.allSettled([loadStatus(), loadExecutionAdapters(), refreshExtensionState(), refreshSkills(), refreshTasks(), refreshRecordings()])
         .then(() => refreshSessionSummary())
         .catch(() => {})
         .finally(() => startAutoRefresh());
